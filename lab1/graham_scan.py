@@ -29,18 +29,9 @@ def create_cartesian_to_polar_converter(origin_tuple):
     return convert
 
 
-def prepare_coordinate_data(origin, coordinate_tuples_list):
-    # remove origin
-    coordinates = coordinate_tuples_list[::]
-    coordinates.remove(origin)
-    # convert to polar
-    coordinates_conversion_dict = {}
-    converter = create_cartesian_to_polar_converter(origin)
-    for coordinates_tuple in coordinates:
-        coordinates_conversion_dict[coordinates_tuple] = converter(coordinates_tuple)
-
+def sort_and_remove_duplicates(coordinate_tuples_list, coordinates_conversion_dict):
     # sort coordinates
-    sorted_coordinates = sorted(coordinates, key=lambda coordinate: coordinates_conversion_dict[coordinate])
+    sorted_coordinates = sorted(coordinate_tuples_list, key=lambda coordinate: coordinates_conversion_dict[coordinate])
 
     # if phi's are equal, keep only the one paired with max r
     checked_phi = set()
@@ -56,6 +47,19 @@ def prepare_coordinate_data(origin, coordinate_tuples_list):
             checked_phi.add(phi)
             results.append(with_equal_phi_and_max_r)
     return results
+
+
+def prepare_coordinate_data(origin, coordinate_tuples_list):
+    # remove origin
+    coordinates = coordinate_tuples_list[::]
+    coordinates.remove(origin)
+    # convert to polar
+    coordinates_conversion_dict = {}
+    converter = create_cartesian_to_polar_converter(origin)
+    for coordinates_tuple in coordinates:
+        coordinates_conversion_dict[coordinates_tuple] = converter(coordinates_tuple)
+
+    return sort_and_remove_duplicates(coordinates, coordinates_conversion_dict)
 
 
 def is_left(point, next_to_top, top):
