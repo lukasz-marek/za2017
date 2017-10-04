@@ -1,5 +1,5 @@
 import math
-
+import lab1.parser as parser
 
 EPSILON = 0
 
@@ -98,5 +98,5 @@ def graham_scan(coordinates_list):
 
 
 if __name__ == "__main__":
-    coords = [(-2, -2), (-5, -3), (-10, -4), (-9, -3), (1, -3), (1, 1), (2, 2), (-4, 1), (-4, 4), (0, 0)]
+    coords = parser.parse()
     print(graham_scan(coords))
