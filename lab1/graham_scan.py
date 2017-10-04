@@ -30,23 +30,24 @@ def create_cartesian_to_polar_converter(origin_tuple):
 
 
 def sort_and_remove_duplicates(coordinate_tuples_list, coordinates_conversion_dict):
-    # sort coordinates
-    sorted_coordinates = sorted(coordinate_tuples_list, key=lambda coordinate: coordinates_conversion_dict[coordinate])
-
     # if phi's are equal, keep only the one paired with max r
     checked_phi = set()
     results = []
-    for coordinates_tuple in sorted_coordinates:
+    for coordinates_tuple in coordinate_tuples_list:
         phi, _ = coordinates_conversion_dict[coordinates_tuple]
         if phi not in checked_phi:
             with_equal_phi = filter(
                 lambda coordinate: math.isclose(coordinates_conversion_dict[coordinate][0], phi, rel_tol=EPSILON),
-                sorted_coordinates)
+                coordinate_tuples_list)
             with_equal_phi_and_max_r = max(with_equal_phi,
                                            key=lambda coordinate: coordinates_conversion_dict[coordinate][1])
             checked_phi.add(phi)
             results.append(with_equal_phi_and_max_r)
-    return results
+
+    # sort coordinates
+    sorted_coordinates = list(sorted(results, key=lambda coordinate: coordinates_conversion_dict[coordinate][0]))
+
+    return sorted_coordinates
 
 
 def prepare_coordinate_data(origin, coordinate_tuples_list):
@@ -71,7 +72,7 @@ def is_left(point, next_to_top, top):
 
 
 def graham_scan(coordinates_list):
-    # if list doesn't containt enough points or is None - return it
+    # if list doesn't contain enough points or is None - return it
     if coordinates_list is None or len(coordinates_list) < 3:
         return coordinates_list
 
@@ -103,4 +104,6 @@ def graham_scan(coordinates_list):
 
 if __name__ == "__main__":
     coords = parser.parse()
-    print(graham_scan(coords))
+    result = graham_scan(coords)
+    print(result)
+    print("Size of results: ", len(result))
