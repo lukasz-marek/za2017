@@ -58,10 +58,10 @@ def prepare_coordinate_data(origin, coordinate_tuples_list):
     return results
 
 
-def is_left(next_to_top, top, point):
-    x1, y1 = next_to_top
-    x2, y2 = top
-    x, y = point
+def is_left(point, next_to_top, top):
+    x1, y1 = point
+    x2, y2 = next_to_top
+    x, y = top
     d = (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
     return d < 0
 
