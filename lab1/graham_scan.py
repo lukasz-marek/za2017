@@ -5,7 +5,7 @@ EPSILON = 0
 
 
 def find_new_origin(coordinate_tuples_list):
-    # origin - min y, min x (bottom left)
+    # origin - min x, min y (bottom left)
     return min(coordinate_tuples_list)
 
 
@@ -28,13 +28,18 @@ def sort_and_remove_duplicates(coordinate_tuples_list, coordinates_conversion_di
     for coordinates_tuple in coordinate_tuples_list:
         phi, _ = coordinates_conversion_dict[coordinates_tuple]
         if phi not in checked_phi:
-            with_equal_phi = filter(
+            with_equal_phi = list(filter(
                 lambda coordinate: math.isclose(coordinates_conversion_dict[coordinate][0], phi, rel_tol=EPSILON),
-                coordinate_tuples_list)
+                coordinate_tuples_list))
+
+            for p, _ in with_equal_phi:
+                checked_phi.add(p)
+
             with_equal_phi_and_max_r = max(with_equal_phi,
                                            key=lambda coordinate: coordinates_conversion_dict[coordinate][1])
-            checked_phi.add(phi)
+
             results.append(with_equal_phi_and_max_r)
+
 
     # sort coordinates
     sorted_coordinates = list(sorted(results, key=lambda coordinate: coordinates_conversion_dict[coordinate][0]))
@@ -55,10 +60,10 @@ def prepare_coordinate_data(origin, coordinate_tuples_list):
     return sort_and_remove_duplicates(coordinates, coordinates_conversion_dict)
 
 
-def is_left(point, next_to_top, top):
-    x1, y1 = point
-    x2, y2 = next_to_top
-    x, y = top
+def is_left(side_point, starting_point, ending_point):
+    x1, y1 = side_point
+    x2, y2 = starting_point
+    x, y = ending_point
     d = (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
     return d < 0
 
@@ -73,19 +78,15 @@ def graham_scan(coordinates_list):
     origin = find_new_origin(coordinates)
     new_coordinates = prepare_coordinate_data(origin, coordinates)
 
-    # algorithm requires 3 or more points but origin is a point as well, so check for three
+    # algorithm requires 3 or more points but origin is a point as well, so require two more
     if len(new_coordinates) >= 2:
-        # functions defined by Cormen
-        top = lambda x: x[0]
-        next_to_top = lambda x: x[1]
-
         results = []
         results.insert(0, origin)
         results.insert(0, new_coordinates.pop(0))
         results.insert(0, new_coordinates.pop(0))
 
         for coordinate in new_coordinates:
-            while not is_left(coordinate, next_to_top(results), top(results)):
+            while not is_left(coordinate, results[1], results[0]):
                 results.pop(0)
             results.insert(0, coordinate)
 
