@@ -40,7 +40,6 @@ def sort_and_remove_duplicates(coordinate_tuples_list, coordinates_conversion_di
 
             results.append(with_equal_phi_and_max_r)
 
-
     # sort coordinates
     sorted_coordinates = list(sorted(results, key=lambda coordinate: coordinates_conversion_dict[coordinate][0]))
 
