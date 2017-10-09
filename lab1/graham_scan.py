@@ -6,15 +6,7 @@ EPSILON = 0
 
 def find_new_origin(coordinate_tuples_list):
     # origin - min y, min x (bottom left)
-    new_origin = None
-    for x, y in coordinate_tuples_list:
-        if not new_origin:
-            new_origin = (x, y)
-        else:
-            origin_x, origin_y = new_origin
-            if y < origin_y or (y == origin_y and origin_x > x):
-                new_origin = (x, y)
-    return new_origin
+    return min(coordinate_tuples_list)
 
 
 def create_cartesian_to_polar_converter(origin_tuple):
