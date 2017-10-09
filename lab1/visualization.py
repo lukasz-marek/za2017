@@ -19,8 +19,8 @@ if __name__ == "__main__":
     for x, y in preprocessed:
         plt.plot(x, y, marker='X', ls='', color='green')
 
-    segments = result[::]
-    segments.append(result[0])
+    segments = result[::-1]
+    segments.append(origin)
 
     for i in range(len(segments) - 1):
         start = segments[i]
