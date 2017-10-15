@@ -5,9 +5,6 @@ import sys
 import os
 
 
-BUFFER_SIZE = 8
-
-
 class HuffmanNode:
     def __init__(self, symbol, count):
         self.count = count
@@ -145,13 +142,13 @@ def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
                 symbol = input_buffer[:symbol_length]
                 input_buffer = input_buffer[symbol_length:]
                 output_buffer += encoding_dict[symbol]
-            while len(output_buffer) >= BUFFER_SIZE:
-                to_store = output_buffer[:BUFFER_SIZE]
-                output_buffer = output_buffer[BUFFER_SIZE:]
+            while len(output_buffer) >= 8:
+                to_store = output_buffer[:8]
+                output_buffer = output_buffer[8:]
                 b = Bits(bin=to_store)
                 output_file.write(b.tobytes())
         if len(output_buffer) > 0:
-            buffer = output_buffer + "0" * (BUFFER_SIZE - len(output_buffer))
+            buffer = output_buffer + "0" * (8 - len(output_buffer))
             b = Bits(bin=buffer)
             output_file.write(b.tobytes())
 
@@ -170,7 +167,7 @@ def decode(filename_in, filename_out):
                 key = bin(byte)
 
                 key = key.replace("0b", "")
-                key = "0" * (BUFFER_SIZE - len(key)) + key
+                key = "0" * (8 - len(key)) + key
 
                 buffer += key
 
