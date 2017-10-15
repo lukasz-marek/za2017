@@ -57,11 +57,12 @@ class HuffmanNode:
 
     def find_by_path(self, bin_path):
         current = self
-        path = [char for char in bin_path]
+        path = bin_path
         used = 0
 
         while current.symbol is None and len(path) > 0:
-            to_go = path.pop(0)
+            to_go = path[0]
+            path = path[1:]
             if to_go == '0':
                 current = current.left
             else:
@@ -70,25 +71,24 @@ class HuffmanNode:
 
         return current.symbol, used
 
-    """ @staticmethod
-     def from_dict(dict_of_mappings):
-         root = HuffmanNode(None, None)
-         for symbol, code in dict_of_mappings.items():
-             current = root
-             code_path = [part for part in code]
+    @staticmethod
+    def from_dict(dict_of_mappings):
+        root = HuffmanNode(None, None)
+        for symbol, code in dict_of_mappings.items():
+            current = root
+            code_path = [part for part in code]
+            while len(code_path) > 0:
+                destination = code_path.pop(0)
+                if destination == '0':
+                    current.left = HuffmanNode(None, None) if current.left is None else current.left
+                    current = current.left
+                else:
+                    current.right = HuffmanNode(None, None) if current.right is None else current.right
+                    current = current.right
 
-             while len(code_path) > 0:
-                 destination = code_path.pop(0)
-                 if destination == '0':
-                     current.left = HuffmanNode(None, None) if current.left is None else current.left
-                     current = current.left
-                 else:
-                     current.right = HuffmanNode(None, None) if current.right is None else current.right
-                     current = current.right
+            current.symbol = symbol
 
-             current.symbol = symbol
-
-         return root"""
+        return root
 
 
 def compute_symbol_counts(filepath, symbol_length=1):
@@ -161,7 +161,7 @@ def decode(filename_in, filename_out):
 
         codes_dict = ast.literal_eval(str(file_in.readline(), "utf-8", errors="strict").strip())
         codes_dict = decompress_dict(codes_dict)
-        codes_dict = {v: k for k, v in codes_dict.items()}
+        huffman_tree = HuffmanNode.from_dict(codes_dict)
 
         b = file_in.read(1)
         buffer = ""
@@ -174,13 +174,11 @@ def decode(filename_in, filename_out):
 
                 buffer += key
 
-                prefix = find_prefix(buffer, codes_dict)
-                while prefix is not None:
-                    used_bits = len(prefix)
+                symbol, used_bits = huffman_tree.find_by_path(buffer)
+                while symbol is not None:
                     buffer = buffer[used_bits:]
-                    symbol = codes_dict[prefix]
                     file_out.write(symbol)
-                    prefix = find_prefix(buffer, codes_dict)
+                    symbol, used_bits = huffman_tree.find_by_path(buffer)
 
             b = file_in.read(1)
 
@@ -259,8 +257,3 @@ if __name__ == "__main__":
             output_size = os.path.getsize(FILENAME_OUT)
             L = (input_size - output_size) / input_size
             print("Symbol length = ", symbol_length, ", ", "L = ", L)
-
-
-
-
-
