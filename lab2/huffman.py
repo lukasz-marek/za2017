@@ -1,10 +1,11 @@
 from queue import PriorityQueue
 from bitstring import Bits
 import ast
+import sys
+import os
 
 
 BUFFER_SIZE = 8
-SYMBOL_LENGTH = 1
 
 
 class HuffmanNode:
@@ -141,7 +142,7 @@ def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
             output_file.write(b.tobytes())
 
 
-def decode(filename_in, filename_out, mapping):
+def decode(filename_in, filename_out):
     with open(filename_in, "rb") as file_in, open(filename_out, "w+", encoding="utf-8") as file_out:
 
         codes_dict = ast.literal_eval(str(file_in.readline(), "utf-8", errors="strict").strip())
@@ -204,14 +205,30 @@ def decompress_dict(prefix_dict):
 
 
 if __name__ == "__main__":
-    filename_in = "test.txt"
-    filename_encoded = "encoded.bin"
-    filename_decoded = "decoded.txt"
-    symbols = compute_symbol_counts(filename_in, symbol_length=SYMBOL_LENGTH)
-    result = huffman(symbols)
-    mapping = result.to_dict()
-    encode(filename_in, filename_encoded, mapping, symbol_length=SYMBOL_LENGTH)
-    decode(filename_encoded, filename_decoded, mapping)
+    print(sys.argv)
+    MODE = sys.argv[1]
+    if MODE == "e":
+
+        SYMBOL_LENGTH = int(sys.argv[2])
+        FILENAME_IN = os.path.normpath(sys.argv[3])
+        FILENAME_OUT = os.path.normpath(sys.argv[4])
+
+        symbols = compute_symbol_counts(FILENAME_IN, symbol_length=SYMBOL_LENGTH)
+        result = huffman(symbols)
+        mapping = result.to_dict()
+        encode(FILENAME_IN, FILENAME_OUT, mapping, symbol_length=SYMBOL_LENGTH)
+        input_size = os.path.getsize(FILENAME_IN)
+        output_size = os.path.getsize(FILENAME_OUT)
+        L = (input_size - output_size) / input_size
+        print("L = ", L)
+    elif MODE == "d":
+
+        FILENAME_IN = os.path.normpath(sys.argv[2])
+        FILENAME_OUT = os.path.normpath(sys.argv[3])
+
+        decode(FILENAME_IN, FILENAME_OUT)
+    elif MODE == "f":
+        pass
 
 
 
