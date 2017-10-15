@@ -11,6 +11,8 @@ class HuffmanNode:
         self.left = None
         self.right = None
         self.symbol = symbol
+        self.code_part = None
+        self.parent = None
 
     def __eq__(self, other):
         return self.symbol == other.symbol
@@ -19,21 +21,22 @@ class HuffmanNode:
         return self.count < other.count
 
     def find_code(self, symbol):
-        if symbol == self.symbol:
-            return []
-        elif self.symbol:
-            return None
-        elif self.left or self.right:
-            if self.left:
-                search_result = self.left.find_code(symbol)
-                if search_result is not None:
-                    search_result.insert(0, '0')
-                    return search_result
-            if self.right:
-                search_result = self.right.find_code(symbol)
-                if search_result is not None:
-                    search_result.insert(0, '1')
-                    return search_result
+        stack = [self]
+
+        while len(stack) > 0:
+            current = stack.pop(0)
+            if current.symbol is not None:
+                if current.symbol == symbol:
+                    path = [current.code_part]
+                    while current.parent.code_part:
+                        path.insert(0, current.parent.code_part)
+                        current = current.parent
+                    return "".join(path)
+            else:
+                if current.left:
+                    stack.insert(0, current.left)
+                if current.right:
+                    stack.insert(0, current.right)
 
     def to_dict(self):
         to_visit = [self]
@@ -78,9 +81,13 @@ class HuffmanNode:
                 destination = code_path.pop(0)
                 if destination == '0':
                     current.left = HuffmanNode(None, None) if current.left is None else current.left
+                    current.left.code_part = '0'
+                    current.left.parent = current
                     current = current.left
                 else:
                     current.right = HuffmanNode(None, None) if current.right is None else current.right
+                    current.right.code_part = '1'
+                    current.right.parent = current
                     current = current.right
 
             current.symbol = symbol
@@ -120,11 +127,15 @@ def huffman(symbol_counts):
 
     while nodes.qsize() > 1:
         left = nodes.get()
+        left.code_part = '0'
         right = nodes.get()
+        right.code_part = '1'
         new_node_count = left.count + right.count
         new_node = HuffmanNode(None, new_node_count)
         new_node.left = left
         new_node.right = right
+        left.parent = new_node
+        right.parent = new_node
         nodes.put(new_node)
 
     return nodes.get()
