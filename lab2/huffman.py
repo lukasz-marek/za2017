@@ -3,6 +3,7 @@ from bitstring import Bits
 import ast
 import sys
 import os
+from random import choice
 
 
 class HuffmanNode:
@@ -33,10 +34,17 @@ class HuffmanNode:
                         current = current.parent
                     return "".join(path)
             else:
-                if current.left:
-                    stack.insert(0, current.left)
-                if current.right:
-                    stack.insert(0, current.right)
+                if choice([True, False]):
+                    if current.left:
+                        stack.insert(0, current.left)
+                    if current.right:
+                        stack.insert(0, current.right)
+                else:
+                    if current.right:
+                        stack.insert(0, current.right)
+                    if current.left:
+                        stack.insert(0, current.left)
+
 
     def to_dict(self):
         to_visit = [self]
