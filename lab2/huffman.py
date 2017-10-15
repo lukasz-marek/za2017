@@ -93,14 +93,25 @@ class HuffmanNode:
 
 def compute_symbol_counts(filepath, symbol_length=1):
     results = {}
+    buffer = ""
     with open(filepath, "r", encoding="utf-8") as file:
         for line in file:
-            for start_index in range(0, len(line), symbol_length):
-                symbol = line[start_index:start_index + symbol_length]
+            buffer += line
+            while len(buffer) >= symbol_length:
+                symbol = buffer[:symbol_length]
+                buffer = buffer[symbol_length:]
                 if symbol in results:
                     results[symbol] += 1
                 else:
                     results[symbol] = 1
+
+    while len(buffer) > 0:
+        symbol = buffer[:symbol_length]
+        buffer = buffer[symbol_length:]
+        if buffer in results:
+            results[symbol] += 1
+        else:
+            results[symbol] = 1
     return results
 
 
@@ -125,19 +136,22 @@ def huffman(symbol_counts):
 def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
     with open(filename_out, "w+", encoding="utf-8") as output_file:
         output_file.write(str(compress_dict(encoding_dict)) + "\n")
-    buffer = ""
+    output_buffer = ""
     with open(filename_in, "r", encoding="utf-8") as file, open(filename_out, "ab") as output_file:
+        input_buffer = ""
         for line in file:
-            for start_index in range(0, len(line), symbol_length):
-                symbol = line[start_index:start_index + symbol_length]
-                buffer += encoding_dict[symbol]
-                if len(buffer) >= BUFFER_SIZE:
-                    to_store = buffer[:BUFFER_SIZE]
-                    buffer = buffer[BUFFER_SIZE:]
-                    b = Bits(bin=to_store)
-                    output_file.write(b.tobytes())
-        if len(buffer) > 0:
-            buffer = buffer + "0" * (BUFFER_SIZE - len(buffer))
+            input_buffer += line
+            while len(input_buffer) >= symbol_length:
+                symbol = input_buffer[:symbol_length]
+                input_buffer = input_buffer[symbol_length:]
+                output_buffer += encoding_dict[symbol]
+            while len(output_buffer) >= BUFFER_SIZE:
+                to_store = output_buffer[:BUFFER_SIZE]
+                output_buffer = output_buffer[BUFFER_SIZE:]
+                b = Bits(bin=to_store)
+                output_file.write(b.tobytes())
+        if len(output_buffer) > 0:
+            buffer = output_buffer + "0" * (BUFFER_SIZE - len(output_buffer))
             b = Bits(bin=buffer)
             output_file.write(b.tobytes())
 
@@ -228,7 +242,25 @@ if __name__ == "__main__":
 
         decode(FILENAME_IN, FILENAME_OUT)
     elif MODE == "f":
-        pass
+
+        FILENAME_OUT = "temp.bin"
+        FILENAME_IN = os.path.normpath(sys.argv[2])
+        FILE_SIZE = 0
+
+        with open(FILENAME_IN, "r", encoding="utf-8") as test_file:
+            FILE_SIZE = len(test_file.read())
+
+        for symbol_length in range(1, FILE_SIZE):
+            symbols = compute_symbol_counts(FILENAME_IN, symbol_length=symbol_length)
+            result = huffman(symbols)
+            mapping = result.to_dict()
+            encode(FILENAME_IN, FILENAME_OUT, mapping, symbol_length=symbol_length)
+            input_size = os.path.getsize(FILENAME_IN)
+            output_size = os.path.getsize(FILENAME_OUT)
+            L = (input_size - output_size) / input_size
+            print("Symbol length = ", symbol_length, ", ", "L = ", L)
+
+
 
 
 
