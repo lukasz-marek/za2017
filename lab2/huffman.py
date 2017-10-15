@@ -20,6 +20,14 @@ class HuffmanNode:
     def __lt__(self, other):
         return self.count < other.count
 
+    def _get_code(self):
+        current = self
+        path = [current.code_part]
+        while current.parent.code_part:
+            path.insert(0, current.parent.code_part)
+            current = current.parent
+        return "".join(path)
+
     def find_code(self, symbol):
         stack = [self]
 
@@ -27,11 +35,7 @@ class HuffmanNode:
             current = stack.pop(0)
             if current.symbol is not None:
                 if current.symbol == symbol:
-                    path = [current.code_part]
-                    while current.parent.code_part:
-                        path.insert(0, current.parent.code_part)
-                        current = current.parent
-                    return "".join(path)
+                    return current._get_code()
             else:
                 if current.left:
                     stack.insert(0, current.left)
@@ -40,19 +44,16 @@ class HuffmanNode:
 
     def to_dict(self):
         to_visit = [self]
-        nodes = []
+        results = {}
         while len(to_visit) > 0:
             current = to_visit.pop(0)
             if current.symbol:
-                nodes.append(current)
+                results[current.symbol] = current._get_code()
             if current.left:
                 to_visit.insert(0, current.left)
             if current.right:
                 to_visit.insert(0, current.right)
 
-        results = {}
-        for node in nodes:
-            results[node.symbol] = "".join(self.find_code(node.symbol))
         return results
 
     def find_by_path(self, bin_path):
