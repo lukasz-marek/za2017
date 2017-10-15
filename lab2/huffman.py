@@ -7,7 +7,7 @@ BUFFER_SIZE = 8
 SYMBOL_LENGTH = 1
 
 
-class HuffmanNode():
+class HuffmanNode:
     def __init__(self, symbol, count):
         self.count = count
         self.left = None
@@ -123,7 +123,7 @@ def huffman(symbol_counts):
 
 def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
     with open(filename_out, "w+", encoding="utf-8") as output_file:
-        output_file.write(str(encoding_dict) + "\n")
+        output_file.write(str(compress_dict(encoding_dict)) + "\n")
     buffer = ""
     with open(filename_in, "r", encoding="utf-8") as file, open(filename_out, "ab") as output_file:
         for line in file:
@@ -145,6 +145,7 @@ def decode(filename_in, filename_out, mapping):
     with open(filename_in, "rb") as file_in, open(filename_out, "w+", encoding="utf-8") as file_out:
 
         codes_dict = ast.literal_eval(str(file_in.readline(), "utf-8", errors="strict").strip())
+        codes_dict = decompress_dict(codes_dict)
         codes_dict = {v: k for k, v in codes_dict.items()}
 
         b = file_in.read(1)
@@ -172,6 +173,34 @@ def decode(filename_in, filename_out, mapping):
 def find_prefix(buffer, prefix_dict):
     prefixes = set(filter(lambda prefix: buffer.startswith(prefix), prefix_dict.keys()))
     return max(prefixes, key=lambda prefix: len(prefix)) if len(prefixes) > 0 else None
+
+
+def compress_dict(prefix_dict):
+    def compress_prefix(prefix):
+        leading_zeros = 0
+        while len(prefix) > leading_zeros and prefix[leading_zeros] == '0':
+            leading_zeros += 1
+        if leading_zeros > 0:
+            return hex(leading_zeros).replace("0x", "") + ":" + hex(int(prefix, 2)).replace("0x", "")
+        else:
+            return hex(int(prefix, 2)).replace("0x", "")
+
+    return {k: compress_prefix(v) for k, v in prefix_dict.items()}
+
+
+def decompress_dict(prefix_dict):
+    def decompress_prefix(prefix):
+        if ":" in prefix:
+            leading_zeros, decimal_value = prefix.split(":")
+            decimal_value = int(decimal_value, 16)
+            leading_zeros = int(leading_zeros, 16)
+            binary_value = bin(int(decimal_value)).replace("0b", "") if decimal_value > 0 else ''
+            decompressed_value = leading_zeros * '0' + binary_value
+            return decompressed_value
+        else:
+            return bin(int(prefix, 16)).replace("0b", "")
+
+    return {k: decompress_prefix(v) for k, v in prefix_dict.items()}
 
 
 if __name__ == "__main__":
