@@ -1,15 +1,14 @@
-import binarytree
 from queue import PriorityQueue
-from bitstring import Bits, BitString
+from bitstring import Bits
+import ast
 
 
 BUFFER_SIZE = 8
 SYMBOL_LENGTH = 1
 
 
-class HuffmanNode(binarytree.Node):
+class HuffmanNode():
     def __init__(self, symbol, count):
-        super().__init__(count)
         self.count = count
         self.left = None
         self.right = None
@@ -60,7 +59,7 @@ class HuffmanNode(binarytree.Node):
         path = [char for char in bin_path]
         used = 0
 
-        while not current.symbol and len(path) > 0:
+        while current.symbol is None and len(path) > 0:
             to_go = path.pop(0)
             if to_go == '0':
                 current = current.left
@@ -69,6 +68,26 @@ class HuffmanNode(binarytree.Node):
             used += 1
 
         return current.symbol, used
+
+    """ @staticmethod
+     def from_dict(dict_of_mappings):
+         root = HuffmanNode(None, None)
+         for symbol, code in dict_of_mappings.items():
+             current = root
+             code_path = [part for part in code]
+
+             while len(code_path) > 0:
+                 destination = code_path.pop(0)
+                 if destination == '0':
+                     current.left = HuffmanNode(None, None) if current.left is None else current.left
+                     current = current.left
+                 else:
+                     current.right = HuffmanNode(None, None) if current.right is None else current.right
+                     current = current.right
+
+             current.symbol = symbol
+
+         return root"""
 
 
 def compute_symbol_counts(filepath, symbol_length=1):
@@ -103,8 +122,10 @@ def huffman(symbol_counts):
 
 
 def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
+    with open(filename_out, "w+", encoding="utf-8") as output_file:
+        output_file.write(str(encoding_dict) + "\n")
     buffer = ""
-    with open(filename_in, "r", encoding="utf-8") as file, open(filename_out, "wb+") as output_file:
+    with open(filename_in, "r", encoding="utf-8") as file, open(filename_out, "ab") as output_file:
         for line in file:
             for start_index in range(0, len(line), symbol_length):
                 symbol = line[start_index:start_index + symbol_length]
@@ -120,8 +141,12 @@ def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
             output_file.write(b.tobytes())
 
 
-def decode(filename_in, filename_out, huffman_tree, symbol_length=1):
+def decode(filename_in, filename_out, mapping):
     with open(filename_in, "rb") as file_in, open(filename_out, "w+", encoding="utf-8") as file_out:
+
+        codes_dict = ast.literal_eval(str(file_in.readline(), "utf-8", errors="strict").strip())
+        codes_dict = {v: k for k, v in codes_dict.items()}
+
         b = file_in.read(1)
         buffer = ""
         while b:
@@ -133,13 +158,21 @@ def decode(filename_in, filename_out, huffman_tree, symbol_length=1):
 
                 buffer += key
 
-                symbol, used_bits = huffman_tree.find_by_path(buffer)
-                while symbol is not None:
+                prefix = find_prefix(buffer, codes_dict)
+                while prefix is not None:
+                    used_bits = len(prefix)
                     buffer = buffer[used_bits:]
+                    symbol = codes_dict[prefix]
                     file_out.write(symbol)
-                    symbol, used_bits = huffman_tree.find_by_path(buffer)
+                    prefix = find_prefix(buffer, codes_dict)
 
             b = file_in.read(1)
+
+
+def find_prefix(buffer, prefix_dict):
+    prefixes = set(filter(lambda prefix: buffer.startswith(prefix), prefix_dict.keys()))
+    return max(prefixes, key=lambda prefix: len(prefix)) if len(prefixes) > 0 else None
+
 
 if __name__ == "__main__":
     filename_in = "test.txt"
@@ -149,7 +182,7 @@ if __name__ == "__main__":
     result = huffman(symbols)
     mapping = result.to_dict()
     encode(filename_in, filename_encoded, mapping, symbol_length=SYMBOL_LENGTH)
-    decode(filename_encoded, filename_decoded, result, symbol_length=SYMBOL_LENGTH)
+    decode(filename_encoded, filename_decoded, mapping)
 
 
 
