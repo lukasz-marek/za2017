@@ -159,9 +159,14 @@ def encode(filename_in, filename_out, encoding_dict, symbol_length=1):
                 output_buffer = output_buffer[8:]
                 b = Bits(bin=to_store)
                 output_file.write(b.tobytes())
+
+        if len(input_buffer) > 0:
+            symbol = encoding_dict[input_buffer]
+            output_buffer += symbol
+
         if len(output_buffer) > 0:
-            buffer = output_buffer + "0" * (8 - len(output_buffer))
-            b = Bits(bin=buffer)
+            output_buffer = output_buffer + "0" * (8 - len(output_buffer) % 8)
+            b = Bits(bin=output_buffer)
             output_file.write(b.tobytes())
 
 
