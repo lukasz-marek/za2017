@@ -27,21 +27,29 @@ def floyd_warshall(graph):
             precedessors[x] = {}
         precedessors[x][y] = x
 
-    nodes = list(map(lambda edge: edge[0], edges))
+    nodes = list(sorted(set(map(lambda edge: edge[0], edges))))
 
     for middle in nodes:
         for start in nodes:
+
             if middle not in distances[start]:
                 distances[start][middle] = math.inf
+
             for end in nodes:
+                if end not in precedessors[middle]:
+                    precedessors[middle][end] = None
+
                 if end not in distances[start]:
                     distances[start][end] = math.inf
 
                 if end not in distances[middle]:
                     distances[middle][end] = math.inf
 
-                if distances[start][end] > distances[start][middle] + distances[middle][end]:
-                    distances[start][end] = distances[start][middle] + distances[middle][end]
+                old_distance = distances[start][end]
+                new_distance = distances[start][middle] + distances[middle][end]
+
+                if old_distance > new_distance:
+                    distances[start][end] = new_distance
                     precedessors[start][end] = precedessors[middle][end]
 
     return distances, precedessors
@@ -52,9 +60,9 @@ if __name__ == "__main__":
     data = load_data(file_name)
     d, p = floyd_warshall(data)
     print("Distance(1,20) =", d[1][20])
-    x = 1
+    x = 20
     print("Path:")
-    while x != p[x][20]:
-        next_x = p[x][20]
-        print(x, " -> ", next_x)
-        x = next_x
+    while p[1][x] is not None:
+        prev_x = p[1][x]
+        print(prev_x, " -> ", x)
+        x = prev_x
