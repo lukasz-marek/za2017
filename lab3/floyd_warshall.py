@@ -1,5 +1,6 @@
 import math
 
+
 def load_data(filepath):
     graph = {}
     with open(filepath, "r", encoding="utf-8") as input_file:
@@ -9,7 +10,6 @@ def load_data(filepath):
             to_node = int(parts[1])
             weight = int(parts[2])
             graph[(from_node, to_node)] = weight
-            graph[(to_node, from_node)] = weight
     return graph
 
 
@@ -18,6 +18,7 @@ def floyd_warshall(graph):
 
     distances = {}
     precedessors = {}
+    nodes = set()
     for x, y in edges:
         if x not in distances:
             distances[x] = {}
@@ -26,8 +27,10 @@ def floyd_warshall(graph):
         if x not in precedessors:
             precedessors[x] = {}
         precedessors[x][y] = x
+        nodes.add(x)
+        nodes.add(y)
 
-    nodes = list(sorted(set(map(lambda edge: edge[0], edges))))
+    nodes = list(sorted(nodes))
 
     for middle in nodes:
         for start in nodes:
@@ -60,6 +63,7 @@ if __name__ == "__main__":
     data = load_data(file_name)
     d, p = floyd_warshall(data)
     print("Distance(1,20) =", d[1][20])
+
     x = 20
     print("Path:")
     while p[1][x] is not None:
