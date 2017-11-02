@@ -32,7 +32,6 @@ def get_vertexes(graph):
 
 
 def find_paths(graph, source, destination):
-    paths = []
     to_visit = []
     for next_node in graph[source].keys():
         to_visit.append((next_node, [source]))
@@ -44,11 +43,12 @@ def find_paths(graph, source, destination):
         new_path.append(current)
 
         if current == destination:
-            paths.append(new_path)
-        elif current not in path and current in graph:
+            yield new_path
+        elif current in graph:
             for next_node in graph[current].keys():
-                to_visit.insert(0, (next_node, new_path))
-    return paths
+                if next_node not in new_path:
+                    to_visit.insert(0, (next_node, new_path))
+    raise StopIteration()
 
 
 def is_p(path, c, f):
@@ -61,7 +61,7 @@ def is_p(path, c, f):
 
 
 def compute_next_cf(path, c, f):
-    cf = -inf
+    cf = inf
     for index in range(len(path) - 1):
         u, v = path[index], path[index + 1]
         cf_candidate = c[u][v] - f[u][v]
@@ -78,15 +78,16 @@ def ford_fulkerson(graph, c, source, destination):
         for v2 in vertexes:
             f[v1][v2] = 0
 
-    paths = find_paths(graph, source, destination)
-    p = next(filter(lambda x: is_p(x, c, f), paths), None)
+    paths_generator = find_paths(graph, source, destination)
+
+    p = next(filter(lambda x: is_p(x, c, f), paths_generator), None)
     while p is not None:
         cf = compute_next_cf(p, c, f)
         for index in range(len(p) - 1):
             u, v = p[index], p[index + 1]
             f[u][v] = f[u][v] + cf
             f[v][u] = f[v][u] - cf
-        p = next(filter(lambda x: is_p(x, c, f), paths), None)
+        p = next(filter(lambda x: is_p(x, c, f), paths_generator), None)
 
     return f
 
