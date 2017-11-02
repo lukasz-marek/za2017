@@ -1,6 +1,7 @@
 import numpy as np
 from math import inf
 
+
 def load_data(file_name):
     graph = {}
     with open(file_name, "r", encoding="utf-8") as input_file:
