@@ -1,3 +1,6 @@
+import numpy as np
+from math import inf
+
 def load_data(file_name):
     graph = {}
     with open(file_name, "r", encoding="utf-8") as input_file:
@@ -9,7 +12,14 @@ def load_data(file_name):
             if source not in graph:
                 graph[source] = {}
             graph[source][destination] = flow
-    return graph
+
+    vertexes = get_vertexes(graph)
+    matrix_size = max(vertexes) + 1
+    graph_matrix = np.zeros((matrix_size, matrix_size))
+    for v1, v2s in graph.items():
+        for v2, flow in v2s.items():
+            graph_matrix[v1][v2] = flow
+    return graph, graph_matrix
 
 
 def get_vertexes(graph):
@@ -24,44 +34,63 @@ def get_vertexes(graph):
 def find_paths(graph, source, destination):
     paths = []
     to_visit = []
-    for v in graph[source]:
-        to_visit.append((source, v, [source]))
+    for next_node in graph[source].keys():
+        to_visit.append((next_node, [source]))
 
     while len(to_visit) > 0:
-        source, current, path = to_visit.pop(0)
-        paths.append((source, current))
-        for v in graph[current]:
-            new_path = list(path)
-            new_path.append(current)
-            to_visit.append((source, v, new_path))
-            to_visit.append((current, v, [current]))
+        current, path = to_visit.pop(0)
+
+        new_path = list(path)
+        new_path.append(current)
+
+        if current == destination:
+            paths.append(new_path)
+        elif current not in path and current in graph:
+            for next_node in graph[current].keys():
+                to_visit.insert(0, (next_node, new_path))
+    return paths
 
 
-    return [(2, 45)]
+def is_p(path, c, f):
+    for index in range(len(path) - 1):
+        u, v = path[index], path[index + 1]
+        cf = c[u][v] - f[u][v]
+        if cf <= 0:
+            return False
+    return True
 
-def compute_residual_flow(residual, flows, u, v):
-    return residual[u][v] - flows[u][v]
 
-def ford_fulkerson(graph, source, destination):
-    residual = {}
-    flow = {}
+def compute_next_cf(path, c, f):
+    cf = -inf
+    for index in range(len(path) - 1):
+        u, v = path[index], path[index + 1]
+        cf_candidate = c[u][v] - f[u][v]
+        if cf > cf_candidate:
+            cf = cf_candidate
+    return cf
+
+
+def ford_fulkerson(graph, c, source, destination):
+    f = np.zeros_like(c)
+
     vertexes = get_vertexes(graph)
     for v1 in vertexes:
-        flow[v1] = {}
-        residual[v1] = {}
         for v2 in vertexes:
-            flow[v1][v2] = 0
-            residual[v1][v2] = graph[v1][v2] if v1 in graph and v2 in graph[v1] else 0
+            f[v1][v2] = 0
 
     paths = find_paths(graph, source, destination)
-    while residual[source][destination] > 0:
-        cf = min(map(lambda pair: compute_residual_flow(residual, flow, pair[0], pair[1]), paths))
-        for u, v in paths:
-            pass
+    p = next(filter(lambda x: is_p(x, c, f), paths), None)
+    while p is not None:
+        cf = compute_next_cf(p, c, f)
+        for index in range(len(p) - 1):
+            u, v = p[index], p[index + 1]
+            f[u][v] = f[u][v] + cf
+            f[v][u] = f[v][u] - cf
+        p = next(filter(lambda x: is_p(x, c, f), paths), None)
 
-
+    return f
 
 
 if __name__ == "__main__":
-    data = load_data("graph1.txt")
-    ford_fulkerson(data, 2, 45)
+    graph, matrix = load_data("graph1.txt")
+    result = ford_fulkerson(graph, matrix, 43, 180)
