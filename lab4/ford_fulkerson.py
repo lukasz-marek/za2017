@@ -94,10 +94,10 @@ def ford_fulkerson(graph, c, source, destination):
             f[v][u] = f[v][u] - cf
         path = next(paths_generator, None)
 
-    return max_flow
+    return max_flow, f
 
 
 if __name__ == "__main__":
     graph, matrix = load_data("graph1.txt")
-    result = ford_fulkerson(graph, matrix, 43, 180)
-    print(result)
+    max_flow, flows = ford_fulkerson(graph, matrix, 43, 180)
+    print(max_flow)
