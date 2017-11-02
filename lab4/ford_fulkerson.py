@@ -81,17 +81,17 @@ def ford_fulkerson(graph, c, source, destination):
 
     paths_generator = find_paths(graph, source, destination, c, f)
 
-    p = next(paths_generator, None)
+    path = next(paths_generator, None)
 
     max_flow = 0
-    while p is not None:
-        cf = compute_path_flow(p, c, f)
+    while path is not None:
+        cf = compute_path_flow(path, c, f)
         max_flow += cf
-        for index in range(len(p) - 1):
-            u, v = p[index], p[index + 1]
+        for index in range(len(path) - 1):
+            u, v = path[index], path[index + 1]
             f[u][v] = f[u][v] + cf
             f[v][u] = f[v][u] - cf
-        p = next(paths_generator, None)
+        path = next(paths_generator, None)
 
     return max_flow
 
