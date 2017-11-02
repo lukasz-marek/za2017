@@ -31,7 +31,7 @@ def get_vertexes(graph):
     return vertexes
 
 
-def find_paths(graph, source, destination):
+def find_paths(graph, source, destination, c, f):
     to_visit = []
     for next_node in graph[source].keys():
         to_visit.append((next_node, [source]))
@@ -42,12 +42,13 @@ def find_paths(graph, source, destination):
         new_path = list(path)
         new_path.append(current)
 
-        if current == destination:
+        if current == destination and is_p(new_path, c, f):
             yield new_path
         elif current in graph:
             for next_node in graph[current].keys():
-                if next_node not in new_path:
-                    to_visit.insert(0, (next_node, new_path))
+                cf = c[current][next_node] - f[current][next_node]
+                if cf > 0 and next_node not in new_path and is_p(new_path, c, f):
+                    to_visit.append((next_node, new_path))
     raise StopIteration()
 
 
@@ -60,7 +61,7 @@ def is_p(path, c, f):
     return True
 
 
-def compute_next_cf(path, c, f):
+def compute_path_flow(path, c, f):
     cf = inf
     for index in range(len(path) - 1):
         u, v = path[index], path[index + 1]
@@ -78,20 +79,24 @@ def ford_fulkerson(graph, c, source, destination):
         for v2 in vertexes:
             f[v1][v2] = 0
 
-    paths_generator = find_paths(graph, source, destination)
+    paths_generator = find_paths(graph, source, destination, c, f)
 
-    p = next(filter(lambda x: is_p(x, c, f), paths_generator), None)
+    p = next(paths_generator, None)
+
+    max_flow = 0
     while p is not None:
-        cf = compute_next_cf(p, c, f)
+        cf = compute_path_flow(p, c, f)
+        max_flow += cf
         for index in range(len(p) - 1):
             u, v = p[index], p[index + 1]
             f[u][v] = f[u][v] + cf
             f[v][u] = f[v][u] - cf
-        p = next(filter(lambda x: is_p(x, c, f), paths_generator), None)
+        p = next(paths_generator, None)
 
-    return f
+    return max_flow
 
 
 if __name__ == "__main__":
     graph, matrix = load_data("graph1.txt")
     result = ford_fulkerson(graph, matrix, 43, 180)
+    print(result)
