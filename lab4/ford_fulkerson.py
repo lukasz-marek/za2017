@@ -1,7 +1,6 @@
 import numpy as np
 from math import inf
 
-
 def load_data(file_name):
     graph = {}
     with open(file_name, "r", encoding="utf-8") as input_file:
@@ -102,19 +101,20 @@ def ford_fulkerson(graph, source, destination):
 if __name__ == "__main__":
     graph = load_data("graph1.txt")
     flows = ford_fulkerson(graph, 43, 180)
-    print("Flow 43->180 =", flows[43][180])
+    print("Flow 43 -> 180 =", -np.sum(flows[180]))
 
     nodes = get_vertexes(graph)
     test_source = 43
     max_node = -1
     max_value = -inf
-    for node in nodes:
+    for node in sorted(nodes, reverse=True):
         if node != test_source:
             flows = ford_fulkerson(graph, test_source, node)
-            flow = np.sum(np.array([x if x > 0 else 0 for x in flows[node]]))
+            flow = -np.sum(flows[node])
+            print(test_source, " -> ", node, " = ", flow)
             if flow > max_value:
                 max_node = node
 
-    print("max flow = ", max_value, " achieved for node ", max_node)
+    print("Max flow: ", test_source, " -> ", max_node, " = ", max_value)
 
 
