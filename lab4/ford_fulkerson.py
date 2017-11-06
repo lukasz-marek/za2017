@@ -111,7 +111,7 @@ def ford_fulkerson(graph, source, destination):
 if __name__ == "__main__":
     graph = load_data("graph1.txt")
     flows = ford_fulkerson(graph, 43, 180)
-    print("Flow 43 -> 180 =", -np.sum(flows[180]))
+    print("Flow 43 -> 180 =", np.sum(flows[43]))
 
     nodes = get_vertexes(graph)
     test_source = 43
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     for node in sorted(nodes, reverse=True):
         if node != test_source:
             flows = ford_fulkerson(graph, test_source, node)
-            flow = -np.sum(flows[node])
+            flow = np.sum(flows[test_source])
             print(test_source, " -> ", node, " = ", flow)
             if flow > max_value:
                 max_node = node
