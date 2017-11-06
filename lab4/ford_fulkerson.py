@@ -1,5 +1,6 @@
 import numpy as np
 from math import inf
+from copy import deepcopy
 
 
 def load_data(file_name):
@@ -50,10 +51,16 @@ def find_paths(graph, source, destination, c, f):
             yield new_path
             to_visit = list(filter(lambda x: is_p(x[1], c, f), to_visit))
         elif current in graph:
+            to_delete = []
             for next_node in graph[current].keys():
                 cf = c[current][next_node] - f[current][next_node]
-                if cf > 0 and next_node not in new_path:
-                    to_visit.append((next_node, new_path))
+                if cf > 0:
+                    if next_node not in new_path:
+                        to_visit.append((next_node, new_path))
+                else:
+                    to_delete.append(next_node)
+            for redundant in to_delete:
+                del graph[current][redundant]
     raise StopIteration()
 
 
@@ -77,6 +84,8 @@ def compute_path_flow(path, c, f):
 
 
 def ford_fulkerson(graph, source, destination):
+
+    graph = deepcopy(graph)
     c = transform_graph_into_matrix(graph)
     f = np.zeros_like(c)
 
