@@ -1,6 +1,7 @@
 import numpy as np
 from math import inf
 from copy import deepcopy
+from lab4.helper import get_Vertexes
 
 
 def load_data(file_name):
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     flows = ford_fulkerson(graph, 43, 180)
     print("Flow 43 -> 180 =", np.sum(flows[43]))
 
-    nodes = get_vertexes(graph)
+    nodes = get_Vertexes(graph)
     test_source = 43
     max_node = -1
     max_value = -inf
@@ -121,7 +122,6 @@ if __name__ == "__main__":
         if node != test_source:
             flows = ford_fulkerson(graph, test_source, node)
             flow = np.sum(flows[test_source])
-            print(test_source, " -> ", node, " = ", flow)
             if flow > max_value:
                 max_node = node
                 max_value = flow
