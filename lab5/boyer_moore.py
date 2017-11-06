@@ -8,24 +8,44 @@ def compute_last_occurrence(pattern, alphabet):
 
 
 def boyer_moore(text, pattern):
-    alphabet = [x for x in text]
-    alphabet.extend([x for x in pattern])
-    alphabet = set(alphabet)
-    last = compute_last_occurrence(pattern, alphabet)
+    def _boyer_moore(text, pattern):
+        alphabet = [x for x in text]
+        alphabet.extend([x for x in pattern])
+        alphabet = set(alphabet)
+        last = compute_last_occurrence(pattern, alphabet)
 
-    i = len(text) - 1
-    j = len(pattern) - 1
-    while len(text) > i > 0:
-        if pattern[j] == text[i]:
-            if j == 0:
-                return i
+        i = len(text) - 1
+        j = len(pattern) - 1
+        while len(text) > i > 0:
+            if pattern[j] == text[i]:
+                if j == 0:
+                    return i
+                else:
+                    j -= 1
+                    i -= 1
             else:
-                j -= 1
-                i -= 1
-        else:
-            i = i -1 #+ len(pattern) - min(j, 1 + last[text[i]])
-            j = len(pattern) - 1
-    return -1
+                i = i - (len(pattern) - max(j, 1 + last[text[i]]))
+                j = len(pattern) - 1
+        return -1
+    occurrence = _boyer_moore(text, pattern)
+    occurrences = []
+
+    def identify_word(inner_index):
+        word = ""
+        index = inner_index
+        while index > 0 and text[index] != " ":
+            word = text[index] + word
+            index -= 1
+        index = inner_index + 1
+        while index < len(text) and text[index] != " ":
+            word = word + text[index]
+            index += 1
+        return word
+
+    while occurrence > -1:
+        occurrences.append((occurrence, identify_word(occurrence)))
+        occurrence = _boyer_moore(text[:occurrence], pattern)
+    return occurrences
 
 
 def get_text(filename):
@@ -38,7 +58,6 @@ def get_text(filename):
 if __name__ == "__main__":
     pattern = "omne"
     text = get_text("text.txt")
-    occurrence = boyer_moore(text, pattern)
-    while occurrence > -1:
-        print(occurrence)
-        occurrence = boyer_moore(text[:occurrence], pattern)
+    results = boyer_moore(text, pattern)
+    print(results)
+
