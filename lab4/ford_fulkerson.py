@@ -36,7 +36,7 @@ def get_vertexes(graph):
     return vertexes
 
 
-def find_paths(graph, source, destination, c, f):
+def find_all_paths(graph, source, destination, c, f):
     to_visit = []
     for next_node in graph[source].keys():
         to_visit.append((next_node, [source]))
@@ -94,7 +94,7 @@ def ford_fulkerson(graph, source, destination):
         for v2 in vertexes:
             f[v1][v2] = 0
 
-    paths_generator = find_paths(graph, source, destination, c, f)
+    paths_generator = find_all_paths(graph, source, destination, c, f)
 
     path = next(paths_generator, None)
 
