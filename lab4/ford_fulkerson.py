@@ -97,7 +97,6 @@ def ford_fulkerson(graph, source, destination):
     paths_generator = find_all_paths(graph, source, destination, c, f)
 
     path = next(paths_generator, None)
-
     while path is not None:
         cf = compute_path_flow(path, c, f)
         for index in range(len(path) - 1):
