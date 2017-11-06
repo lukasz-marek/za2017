@@ -45,12 +45,13 @@ def find_paths(graph, source, destination, c, f):
         new_path = list(path)
         new_path.append(current)
 
-        if current == destination and is_p(new_path, c, f):
+        if current == destination:
             yield new_path
+            to_visit = list(filter(lambda x: is_p(x[1], c, f), to_visit))
         elif current in graph:
             for next_node in graph[current].keys():
                 cf = c[current][next_node] - f[current][next_node]
-                if cf > 0 and next_node not in new_path and is_p(new_path, c, f):
+                if cf > 0 and next_node not in new_path:
                     to_visit.append((next_node, new_path))
     raise StopIteration()
 
