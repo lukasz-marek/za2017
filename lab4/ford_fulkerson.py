@@ -124,6 +124,7 @@ if __name__ == "__main__":
             print(test_source, " -> ", node, " = ", flow)
             if flow > max_value:
                 max_node = node
+                max_value = flow
 
     print("Max flow: ", test_source, " -> ", max_node, " = ", max_value)
 
