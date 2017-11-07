@@ -39,6 +39,7 @@ def get_vertexes(graph):
 
 def find_all_paths(graph, source, destination, c, f):
     to_visit = []
+    graph = deepcopy(graph)
     for next_node in graph[source].keys():
         to_visit.append((next_node, [source]))
 
@@ -86,7 +87,6 @@ def compute_path_flow(path, c, f):
 
 def ford_fulkerson(graph, source, destination):
 
-    graph = deepcopy(graph)
     c = transform_graph_into_matrix(graph)
     f = np.zeros_like(c)
 

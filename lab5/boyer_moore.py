@@ -1,3 +1,5 @@
+import re
+
 def compute_last_occurrence(pattern, alphabet):
     _lambda = {}
     for symbol in alphabet:
@@ -8,12 +10,11 @@ def compute_last_occurrence(pattern, alphabet):
 
 
 def boyer_moore(text, pattern):
-    def _boyer_moore(text, pattern):
-        alphabet = [x for x in text]
-        alphabet.extend([x for x in pattern])
-        alphabet = set(alphabet)
-        last = compute_last_occurrence(pattern, alphabet)
+    whitespace_regex = "\s"
+    text_to_check = text.lower()
+    pattern_to_check = pattern.lower()
 
+    def _boyer_moore(text, pattern):
         i = len(text) - 1
         j = len(pattern) - 1
         while len(text) > i > 0:
@@ -24,27 +25,32 @@ def boyer_moore(text, pattern):
                     j -= 1
                     i -= 1
             else:
-                i = i - (len(pattern) - max(j, 1 + last[text[i]]))
+                i -= len(pattern) - max(j, last[text[i]])
                 j = len(pattern) - 1
         return -1
-    occurrence = _boyer_moore(text, pattern)
-    occurrences = []
 
     def identify_word(inner_index):
         word = ""
         index = inner_index
-        while index > 0 and text[index] != " ":
+        while index > 0 and not re.match(whitespace_regex, text[index]):
             word = text[index] + word
             index -= 1
         index = inner_index + 1
-        while index < len(text) and text[index] != " ":
+        while index < len(text) and not re.match(whitespace_regex, text[index]):
             word = word + text[index]
             index += 1
         return word
 
+    alphabet = [x for x in text_to_check]
+    alphabet.extend([x for x in pattern_to_check])
+    alphabet = set(alphabet)
+    last = compute_last_occurrence(pattern_to_check, alphabet)
+    occurrence = _boyer_moore(text_to_check, pattern_to_check)
+    occurrences = []
+
     while occurrence > -1:
         occurrences.append((occurrence, identify_word(occurrence)))
-        occurrence = _boyer_moore(text[:occurrence], pattern)
+        occurrence = _boyer_moore(text_to_check[:occurrence], pattern_to_check)
     return occurrences
 
 
@@ -58,6 +64,9 @@ def get_text(filename):
 if __name__ == "__main__":
     pattern = "omne"
     text = get_text("text.txt")
-    results = boyer_moore(text, pattern)
-    print(results)
-
+    count = 0
+    for s, word in boyer_moore(text, pattern):
+        print(s, " ", word)
+        count += 1
+    print("---------------------")
+    print(count, " matches found")
