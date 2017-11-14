@@ -29,7 +29,7 @@ class Point:
 def distance_between_points(point1, point2):
     coordinates1 = np.asarray(point1.get_coordinates())
     coordinates2 = np.asarray(point2.get_coordinates())
-    squared_distance = np.sum((coordinates1 - coordinates2)**2)
+    squared_distance = np.sum((coordinates1 - coordinates2) ** 2)
     distance = math.sqrt(squared_distance)
     return distance
 
@@ -96,8 +96,9 @@ def distance_between_face_and_point(face, point):
     if point_belongs_to_face(nearest_point):
         return distance_between_points(nearest_point, point)
     else:
-        a, b, _ = tuple(sorted(face.get_points(), key=lambda p: distance_between_points(p, point)))
-        nearest_edge = Edge(a, b)
+        nearest_edge_point1, nearest_edge_point2, _ = tuple(
+            sorted(face.get_points(), key=lambda p: distance_between_points(p, point)))
+        nearest_edge = Edge(nearest_edge_point1, nearest_edge_point2)
         return distance_between_edge_and_point(nearest_edge, point)
 
 
