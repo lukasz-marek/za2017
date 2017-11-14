@@ -1,5 +1,5 @@
 import math
-from sympy import var, sqrt
+from sympy import var
 from sympy.solvers import solve
 import numpy as np
 
@@ -27,11 +27,9 @@ class Point:
 
 
 def distance_between_points(point1, point2):
-    coordinates1 = point1.get_coordinates()
-    coordinates2 = point2.get_coordinates()
-    squared_distance = (coordinates1[0] - coordinates2[0]) ** 2 \
-                       + (coordinates1[1] - coordinates2[1]) ** 2 \
-                       + (coordinates1[2] - coordinates2[2]) ** 2
+    coordinates1 = np.asarray(point1.get_coordinates())
+    coordinates2 = np.asarray(point2.get_coordinates())
+    squared_distance = np.sum((coordinates1 - coordinates2)**2)
     distance = math.sqrt(squared_distance)
     return distance
 
