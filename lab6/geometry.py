@@ -1,6 +1,7 @@
 import math
 from sympy import var, sqrt
 from sympy.solvers import solve
+import numpy as np
 
 
 class Point:
@@ -17,8 +18,10 @@ class Point:
 
     def x(self):
         return self._x
+
     def y(self):
         return self._y
+
     def z(self):
         return self._z
 
@@ -95,36 +98,35 @@ def distance_between_face_and_point(face, point):
     if point_belongs_to_face(nearest_point):
         return distance_between_points(nearest_point, point)
     else:
-        a, b, c = tuple(face.get_points())
-        edges = [Edge(a,b), Edge(a,c), Edge(b, c)]
-        distance = min(map(lambda e: distance_between_edge_and_point(e, point), edges))
-        return distance
+        a, b, _ = tuple(sorted(face.get_points(), key=lambda p: distance_between_points(p, point)))
+        nearest_edge = Edge(a, b)
+        return distance_between_edge_and_point(nearest_edge, point)
 
 
 def distance_between_edge_and_point(edge, point):
     point1, point2 = tuple(edge.get_points())
-    distance_between_extreme_points = distance_between_points(point1, point2)
-    distance = 0
-    while distance_between_extreme_points > 1e-6:
-        distance_from_1 = distance_between_points(point1, point)
-        distance_from_2 = distance_between_points(point2, point)
-        middle = Point((point1.x() + point2.x())/2, (point1.y() + point2.y())/2, (point1.z() + point2.z())/2)
-        if distance_from_1 < distance_from_2:
-            point2 = middle
-            distance = distance_from_1
-        else:
-            point1 = middle
-            distance = distance_from_2
-        distance_between_extreme_points = distance_between_points(point1, point2)
+    v_vector = np.asarray(point2.get_coordinates()) - np.asarray(point1.get_coordinates())
+    w_vector = np.asarray(point.get_coordinates()) - np.asarray(point1.get_coordinates())
 
-    return distance
+    c1 = np.dot(w_vector, v_vector)
+    if c1 <= 0:
+        return distance_between_points(point, point1)
+
+    c2 = np.dot(v_vector, v_vector)
+    if c2 <= c1:
+        return distance_between_points(point, point2)
+
+    b = c1 / c2
+    nearest_point_coords = np.asarray(point1.get_coordinates()) + b * v_vector
+    nearest_point = Point(nearest_point_coords[0], nearest_point_coords[1], nearest_point_coords[2])
+    return distance_between_points(point, nearest_point)
 
 
 if __name__ == "__main__":
     point_a = Point(0, 0, 0)
-    point_b = Point(10000, 0, 0)
-    point_c = Point(0, 10000, 0)
-    point_p = Point(70, 7, 33)
+    point_b = Point(50, 0, 50)
+    point_c = Point(0, 10, 0)
+    point_p = Point(50, 0, 50)
     face = Face(point_a, point_b, point_c)
     print(distance_between_points(point_a, point_b))
     print(distance_between_face_and_point(face, point_p))
