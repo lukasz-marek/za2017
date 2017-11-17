@@ -109,56 +109,6 @@ def compute_plane_equation(face):
     return tuple(map(lambda number: number.evalf(), plane))
 
 
-def distance_between_faces_sym(face1, face2):
-    min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
-    min_x2 = min(map(lambda point: point.get_coordinates()[0], face2.get_points()))
-
-    max_x1 = max(map(lambda point: point.get_coordinates()[0], face1.get_points()))
-    max_x2 = max(map(lambda point: point.get_coordinates()[0], face2.get_points()))
-
-    min_y1 = min(map(lambda point: point.get_coordinates()[1], face1.get_points()))
-    min_y2 = min(map(lambda point: point.get_coordinates()[1], face2.get_points()))
-
-    max_y1 = max(map(lambda point: point.get_coordinates()[1], face1.get_points()))
-    max_y2 = max(map(lambda point: point.get_coordinates()[1], face2.get_points()))
-
-    min_z1 = min(map(lambda point: point.get_coordinates()[2], face1.get_points()))
-    min_z2 = min(map(lambda point: point.get_coordinates()[2], face2.get_points()))
-
-    max_z1 = max(map(lambda point: point.get_coordinates()[2], face1.get_points()))
-    max_z2 = max(map(lambda point: point.get_coordinates()[2], face2.get_points()))
-
-    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
-    alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
-    x1 = Symbol('x1')
-    x1 = refine(x1, Q.positive(x1 - min_x1) & Q.positive(max_x1 - x1))
-    y1 = Symbol('y1')
-    y1 = refine(y1, Q.positive(y1 - min_y1) & Q.positive(max_y1 - y1))
-    z1 = Symbol('z1')
-    z1 = refine(z1, Q.positive(z1 - min_z1) & Q.positive(max_z1 - z1))
-    x2 = Symbol('x2')
-    x2 = refine(x2, Q.positive(x2 - min_x2) & Q.positive(max_x2 - x2))
-    y2 = Symbol('y2')
-    y2 = refine(y2, Q.positive(y2 - min_y2) & Q.positive(max_y2 - y2))
-    z2 = Symbol('z2')
-    z2 = refine(z2, Q.positive(z2 - min_z2) & Q.positive(max_z2 - z2))
-
-    symbols = [x1, x2, y1, y2, z1, z2]
-
-    distance_equation = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
-    system = []
-    for symbol in symbols:
-        distance_derivative = diff(distance_equation, symbol)
-        system.append(distance_derivative)
-
-    plane1_equation = x1 * alpha1 + y1 * beta1 + gamma1 * z1 + delta1
-    plane2_equation = x2 * alpha2 + y2 * beta2 + gamma2 * z2 + delta2
-    system.append(plane1_equation)
-    system.append(plane2_equation)
-    result = solve(system, x1, y1, z1, x2, y2, z2)
-    pass
-
-
 def distance_between_faces(face1, face2):
     alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
     alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
