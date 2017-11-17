@@ -142,7 +142,7 @@ def distance_between_faces(face1, face2):
     plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
     plane2_constraint = lambda g: g[3] * alpha2 + g[4] * beta2 + g[5] + gamma2 + delta2
     constraints = {'type': 'eq', 'fun':  plane1_constraint}, {'type': 'eq', 'fun':  plane2_constraint}
-    result = minimize(optimized_function, initial_guess, bounds=bounds, constraints=constraints)
+    result = minimize(optimized_function, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
     print(result)
 
 
