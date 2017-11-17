@@ -1,5 +1,5 @@
 import math
-from sympy import var
+from sympy import Symbol
 from sympy.solvers import solve
 import numpy as np
 
@@ -55,10 +55,10 @@ class Face:
 
 def distance_between_face_and_point(face, point):
     def compute_plane_equation():
-        alpha = var('alpha')
-        beta = var('beta')
-        gamma = var('gamma')
-        delta = var('delta')
+        alpha = Symbol('alpha')
+        beta = Symbol('beta')
+        gamma = Symbol('gamma')
+        delta = Symbol('delta')
 
         system = []
         for face_point in face.get_points():
@@ -72,8 +72,8 @@ def distance_between_face_and_point(face, point):
         return tuple(map(lambda number: number.evalf(), plane))
 
     def point_belongs_to_face(point):
-        x = var('x')
-        y = var('y')
+        x = Symbol('x')
+        y = Symbol('y')
         a, b, c = tuple(face.get_points())
         x_equation = x * (a.x() - c.x()) + y * (b.x() - c.x()) - point.x() + c.x()
         y_equation = x * (a.y() - c.y()) + y * (b.y() - c.y()) - point.y() + c.y()
@@ -89,17 +89,21 @@ def distance_between_face_and_point(face, point):
 
     alpha, beta, gamma, delta = compute_plane_equation()
     x, y, z = point.get_coordinates()
-    c = var('c')
+    c = Symbol('c')
     point_equation = alpha * (x + alpha * c) + beta * (y + beta * c) + gamma * (z + gamma * c) + delta
     c = solve(point_equation, c)[0]
     nearest_point = Point(x + alpha * c, y + beta * c, z + gamma * c)
     if point_belongs_to_face(nearest_point):
         return distance_between_points(nearest_point, point)
     else:
-        nearest_edge_point1, nearest_edge_point2, _ = tuple(
-            sorted(face.get_points(), key=lambda p: distance_between_points(p, point)))
-        nearest_edge = Edge(nearest_edge_point1, nearest_edge_point2)
-        return distance_between_edge_and_point(nearest_edge, point)
+        vertex_a, vertex_b, vertex_c = face.get_points();
+        edges = [Edge(vertex_a, vertex_b), Edge(vertex_a, vertex_c), Edge(vertex_b, vertex_c)]
+        minimal_distance = math.inf
+        for edge in edges:
+            distance = distance_between_edge_and_point(edge, point)
+            if distance < minimal_distance:
+                minimal_distance = distance
+        return minimal_distance
 
 
 def distance_between_edge_and_point(edge, point):
@@ -125,7 +129,7 @@ if __name__ == "__main__":
     point_a = Point(0, 0, 0)
     point_b = Point(50, 0, 50)
     point_c = Point(0, 10, 0)
-    point_p = Point(50, 0, 50)
+    point_p = Point(50, 0, 30)
     face = Face(point_a, point_b, point_c)
     print(distance_between_points(point_a, point_b))
     print(distance_between_face_and_point(face, point_p))
