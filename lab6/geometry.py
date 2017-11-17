@@ -2,6 +2,7 @@ import math
 from sympy import Symbol
 from sympy.solvers import solve
 import numpy as np
+from scipy.optimize import minimize
 
 
 class Point:
@@ -54,23 +55,6 @@ class Face:
 
 
 def distance_between_face_and_point(face, point):
-    def compute_plane_equation():
-        alpha = Symbol('alpha')
-        beta = Symbol('beta')
-        gamma = Symbol('gamma')
-        delta = Symbol('delta')
-
-        system = []
-        for face_point in face.get_points():
-            x, y, z = face_point.get_coordinates()
-            equation = x * alpha + y * beta + z * gamma + delta
-            system.append(equation)
-
-        constraint_equation = alpha ** 2 + beta ** 2 + gamma ** 2 - 1
-        system.append(constraint_equation)
-        plane = solve(system, alpha, beta, gamma, delta)[0]
-        return tuple(map(lambda number: number.evalf(), plane))
-
     def point_belongs_to_face(point):
         x = Symbol('x')
         y = Symbol('y')
@@ -87,7 +71,7 @@ def distance_between_face_and_point(face, point):
         x, y = analyzed_data[x], analyzed_data[y]
         return x >= 0 and y >= 0 and x + y <= 1
 
-    alpha, beta, gamma, delta = compute_plane_equation()
+    alpha, beta, gamma, delta = compute_plane_equation(face)
     x, y, z = point.get_coordinates()
     c = Symbol('c')
     point_equation = alpha * (x + alpha * c) + beta * (y + beta * c) + gamma * (z + gamma * c) + delta
@@ -104,6 +88,63 @@ def distance_between_face_and_point(face, point):
             if distance < minimal_distance:
                 minimal_distance = distance
         return minimal_distance
+
+
+def compute_plane_equation(face):
+    alpha = Symbol('alpha')
+    beta = Symbol('beta')
+    gamma = Symbol('gamma')
+    delta = Symbol('delta')
+
+    system = []
+    for face_point in face.get_points():
+        x, y, z = face_point.get_coordinates()
+        equation = x * alpha + y * beta + z * gamma + delta
+        system.append(equation)
+
+    constraint_equation = alpha ** 2 + beta ** 2 + gamma ** 2 - 1
+    system.append(constraint_equation)
+    plane = solve(system, alpha, beta, gamma, delta)[0]
+    return tuple(map(lambda number: number.evalf(), plane))
+
+
+def distance_between_faces(face1, face2):
+    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
+    alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
+    start1 = face1.get_points()[0]
+    start2 = face2.get_points()[0]
+    x1, y1, z1 = start1.get_coordinates()
+    x2, y2, z2 = start2.get_coordinates()
+    initial_guess = [x1, y1, z1, x2, y2, z2]
+    optimized_function = lambda g: math.sqrt((g[0] - g[3]) ** 2 + (g[1] - g[4]) ** 2 + (g[2] - g[5]) ** 2)
+
+    min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
+    min_x2 = min(map(lambda point: point.get_coordinates()[0], face2.get_points()))
+
+    max_x1 = max(map(lambda point: point.get_coordinates()[0], face1.get_points()))
+    max_x2 = max(map(lambda point: point.get_coordinates()[0], face2.get_points()))
+
+    min_y1 = min(map(lambda point: point.get_coordinates()[1], face1.get_points()))
+    min_y2 = min(map(lambda point: point.get_coordinates()[1], face2.get_points()))
+
+    max_y1 = max(map(lambda point: point.get_coordinates()[1], face1.get_points()))
+    max_y2 = max(map(lambda point: point.get_coordinates()[1], face2.get_points()))
+
+    min_z1 = min(map(lambda point: point.get_coordinates()[2], face1.get_points()))
+    min_z2 = min(map(lambda point: point.get_coordinates()[2], face2.get_points()))
+
+    max_z1 = max(map(lambda point: point.get_coordinates()[2], face1.get_points()))
+    max_z2 = max(map(lambda point: point.get_coordinates()[2], face2.get_points()))
+
+    bounds = ((min_x1, max_x1), (min_y1, max_y1), (min_z1, max_z1),
+              (min_x2, max_x2), (min_y2, max_y2), (min_z2, max_z2))
+
+    plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
+    plane2_constraint = lambda g: g[3] * alpha2 + g[4] * beta2 + g[5] + gamma2 + delta2
+    constraints = {'type': 'eq', 'fun':  plane1_constraint}, {'type': 'eq', 'fun':  plane2_constraint}
+    result = minimize(optimized_function, initial_guess, bounds=bounds, constraints=constraints)
+    print(result)
+
 
 
 def distance_between_edge_and_point(edge, point):
@@ -130,6 +171,9 @@ if __name__ == "__main__":
     point_b = Point(50, 0, 50)
     point_c = Point(0, 10, 0)
     point_p = Point(50, 0, 30)
-    face = Face(point_a, point_b, point_c)
+    face1 = Face(point_a, point_b, point_c)
+    face2 = Face(point_a, point_b, point_c)
+
     print(distance_between_points(point_a, point_b))
-    print(distance_between_face_and_point(face, point_p))
+    print(distance_between_face_and_point(face1, point_p))
+    distance_between_faces(face1, face2)
