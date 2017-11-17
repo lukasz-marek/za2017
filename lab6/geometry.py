@@ -1,5 +1,6 @@
 import math
-from sympy import Symbol
+from sympy import Symbol, diff, sqrt, Q
+from sympy.assumptions import refine
 from sympy.solvers import solve
 import numpy as np
 from scipy.optimize import minimize
@@ -108,6 +109,56 @@ def compute_plane_equation(face):
     return tuple(map(lambda number: number.evalf(), plane))
 
 
+def distance_between_faces_sym(face1, face2):
+    min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
+    min_x2 = min(map(lambda point: point.get_coordinates()[0], face2.get_points()))
+
+    max_x1 = max(map(lambda point: point.get_coordinates()[0], face1.get_points()))
+    max_x2 = max(map(lambda point: point.get_coordinates()[0], face2.get_points()))
+
+    min_y1 = min(map(lambda point: point.get_coordinates()[1], face1.get_points()))
+    min_y2 = min(map(lambda point: point.get_coordinates()[1], face2.get_points()))
+
+    max_y1 = max(map(lambda point: point.get_coordinates()[1], face1.get_points()))
+    max_y2 = max(map(lambda point: point.get_coordinates()[1], face2.get_points()))
+
+    min_z1 = min(map(lambda point: point.get_coordinates()[2], face1.get_points()))
+    min_z2 = min(map(lambda point: point.get_coordinates()[2], face2.get_points()))
+
+    max_z1 = max(map(lambda point: point.get_coordinates()[2], face1.get_points()))
+    max_z2 = max(map(lambda point: point.get_coordinates()[2], face2.get_points()))
+
+    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
+    alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
+    x1 = Symbol('x1')
+    x1 = refine(x1, Q.positive(x1 - min_x1) & Q.positive(max_x1 - x1))
+    y1 = Symbol('y1')
+    y1 = refine(y1, Q.positive(y1 - min_y1) & Q.positive(max_y1 - y1))
+    z1 = Symbol('z1')
+    z1 = refine(z1, Q.positive(z1 - min_z1) & Q.positive(max_z1 - z1))
+    x2 = Symbol('x2')
+    x2 = refine(x2, Q.positive(x2 - min_x2) & Q.positive(max_x2 - x2))
+    y2 = Symbol('y2')
+    y2 = refine(y2, Q.positive(y2 - min_y2) & Q.positive(max_y2 - y2))
+    z2 = Symbol('z2')
+    z2 = refine(z2, Q.positive(z2 - min_z2) & Q.positive(max_z2 - z2))
+
+    symbols = [x1, x2, y1, y2, z1, z2]
+
+    distance_equation = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
+    system = []
+    for symbol in symbols:
+        distance_derivative = diff(distance_equation, symbol)
+        system.append(distance_derivative)
+
+    plane1_equation = x1 * alpha1 + y1 * beta1 + gamma1 * z1 + delta1
+    plane2_equation = x2 * alpha2 + y2 * beta2 + gamma2 * z2 + delta2
+    system.append(plane1_equation)
+    system.append(plane2_equation)
+    result = solve(system, x1, y1, z1, x2, y2, z2)
+    pass
+
+
 def distance_between_faces(face1, face2):
     alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
     alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
@@ -116,7 +167,7 @@ def distance_between_faces(face1, face2):
     x1, y1, z1 = start1.get_coordinates()
     x2, y2, z2 = start2.get_coordinates()
     initial_guess = np.asarray([x1, y1, z1, x2, y2, z2])
-    optimized_function = lambda g: math.sqrt((g[0] - g[3]) ** 2 + (g[1] - g[4]) ** 2 + (g[2] - g[5]) ** 2)
+    optimized_function = lambda g: (g[0] - g[3]) ** 2 + (g[1] - g[4]) ** 2 + (g[2] - g[5]) ** 2
 
     min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
     min_x2 = min(map(lambda point: point.get_coordinates()[0], face2.get_points()))
@@ -142,8 +193,9 @@ def distance_between_faces(face1, face2):
     plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
     plane2_constraint = lambda g: g[3] * alpha2 + g[4] * beta2 + g[5] + gamma2 + delta2
     constraints = {'type': 'eq', 'fun': plane1_constraint}, {'type': 'eq', 'fun': plane2_constraint}
-    result = minimize(optimized_function, initial_guess, method='SLSQP', bounds=bounds, constraints=constraints)
-    return result.fun
+    result = minimize(optimized_function, initial_guess, method="SLSQP", bounds=bounds, constraints=constraints,
+                      options={'maxiter': 5000, 'eps': 1e-20, 'ftol': 1e-20})
+    return math.sqrt(result.fun)
 
 
 def distance_between_edge_and_point(edge, point):
@@ -166,13 +218,18 @@ def distance_between_edge_and_point(edge, point):
 
 
 if __name__ == "__main__":
-    point_a = Point(0, 0, 0)
-    point_b = Point(50, 0, 50)
-    point_c = Point(0, 10, 0)
-    point_p = Point(50, 0, 30)
+    dist = math.pi
+    point_a = Point(10, 0, 0 + dist)
+    point_b = Point(0, 10, 0 + dist)
+    point_c = Point(0, 0, 10 + dist)
+    point_p = Point(3000, 11000, 300)
     face1 = Face(point_a, point_b, point_c)
-    face2 = Face(point_a, point_b, point_c)
+    point_a2 = Point(10, 0, 0)
+    point_b2 = Point(0, 10, 0)
+    point_c2 = Point(0, 0, 10)
+    face2 = Face(point_a2, point_b2, point_c2)
 
-    print(distance_between_points(point_a, point_b))
-    print(distance_between_face_and_point(face1, point_p))
+    # print(distance_between_points(point_a, point_b))
+    # print(distance_between_face_and_point(face1, point_p))
     print(distance_between_faces(face1, face2))
+    # print(distance_between_faces_sym(face1, face2))
