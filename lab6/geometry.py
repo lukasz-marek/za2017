@@ -115,7 +115,7 @@ def distance_between_faces(face1, face2):
     start2 = face2.get_points()[0]
     x1, y1, z1 = start1.get_coordinates()
     x2, y2, z2 = start2.get_coordinates()
-    initial_guess = [x1, y1, z1, x2, y2, z2]
+    initial_guess = np.asarray([x1, y1, z1, x2, y2, z2])
     optimized_function = lambda g: math.sqrt((g[0] - g[3]) ** 2 + (g[1] - g[4]) ** 2 + (g[2] - g[5]) ** 2)
 
     min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
