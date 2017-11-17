@@ -1,9 +1,11 @@
 import math
-from sympy import Symbol, diff, sqrt, Q
-from sympy.assumptions import refine
+from sympy import Symbol
+from functools import lru_cache
 from sympy.solvers import solve
 import numpy as np
 from scipy.optimize import minimize
+
+CACHE_SIZE = 1000
 
 
 class Point:
@@ -11,6 +13,7 @@ class Point:
         self._x = x
         self._y = y
         self._z = z
+        self._hashcode = hash((x, y, z))
 
     def get_coordinates(self):
         return self._x, self._y, self._z
@@ -27,7 +30,11 @@ class Point:
     def z(self):
         return self._z
 
+    def __hash__(self):
+        return self._hashcode
 
+
+@lru_cache(maxsize=CACHE_SIZE)
 def distance_between_points(point1, point2):
     coordinates1 = np.asarray(point1.get_coordinates())
     coordinates2 = np.asarray(point2.get_coordinates())
@@ -40,9 +47,13 @@ class Edge:
     def __init__(self, point1, point2):
         self._point1 = point1
         self._point2 = point2
+        self._hash = hash((point1, point2))
 
     def get_points(self):
         return [self._point1, self._point2]
+
+    def __hash__(self):
+        return self._hash
 
 
 class Face:
@@ -50,11 +61,16 @@ class Face:
         self._point1 = point1
         self._point2 = point2
         self._point3 = point3
+        self._hashcode = hash((point1, point2, point3))
 
     def get_points(self):
         return [self._point1, self._point2, self._point3]
 
+    def __hash__(self):
+        return self._hashcode
 
+
+@lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
     def point_belongs_to_face(point):
         x = Symbol('x')
@@ -91,6 +107,7 @@ def distance_between_face_and_point(face, point):
         return minimal_distance
 
 
+@lru_cache(maxsize=CACHE_SIZE)
 def compute_plane_equation(face):
     alpha = Symbol('alpha')
     beta = Symbol('beta')
@@ -109,6 +126,7 @@ def compute_plane_equation(face):
     return tuple(map(lambda number: number.evalf(), plane))
 
 
+@lru_cache(maxsize=CACHE_SIZE)
 def distance_between_faces(face1, face2):
     alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
     alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
@@ -148,6 +166,7 @@ def distance_between_faces(face1, face2):
     return math.sqrt(result.fun)
 
 
+@lru_cache(maxsize=CACHE_SIZE)
 def distance_between_edge_and_point(edge, point):
     point1, point2 = tuple(edge.get_points())
     v_vector = np.asarray(point2.get_coordinates()) - np.asarray(point1.get_coordinates())
