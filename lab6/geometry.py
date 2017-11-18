@@ -6,6 +6,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 CACHE_SIZE = 1000
+PARALLEL_TOLERANCE = 1e-16
 
 
 class Point:
@@ -184,6 +185,66 @@ def distance_between_edge_and_point(edge, point):
     nearest_point_coords = np.asarray(point1.get_coordinates()) + b * v_vector
     nearest_point = Point(nearest_point_coords[0], nearest_point_coords[1], nearest_point_coords[2])
     return distance_between_points(point, nearest_point)
+
+
+@lru_cache(maxsize=CACHE_SIZE)
+def distance_between_edges(edge1, edge2):
+    vector_u = np.asarray(edge1.get_points()[1].get_coordinates()) - np.asarray(edge1.get_points()[0].get_coordinates())
+    vector_v = np.asarray(edge2.get_points()[1].get_coordinates()) - np.asarray(edge2.get_points()[0].get_coordinates())
+    vector_w = np.asarray(edge1.get_points()[0].get_coordinates()) - np.asarray(edge2.get_points()[0].get_coordinates())
+    a = np.dot(vector_u, vector_u)
+    b = np.dot(vector_u, vector_v)
+    c = np.dot(vector_v, vector_v)
+    d = np.dot(vector_u, vector_w)
+    e = np.dot(vector_v, vector_w)
+    D = a*c - b*b
+    sc, sN, sD = D, D, D
+    tc, tN, tD = D, D, D
+
+    if D < PARALLEL_TOLERANCE:
+        sN = 0
+        sD = 1
+        tN = e
+        tD = c
+    else:
+        sN = b*e - c*d
+        tN = a*e - b*d
+        if sN < 0:
+            sN = 0
+            tN = e
+            tD = c
+        elif sN > sD:
+            sN = sD
+            tN = e + b
+            tD = c
+
+    if tN < 0:
+        tN = 0
+        if -d < 0:
+            sN = 0
+        elif -d > a:
+            sN = sD
+        else:
+            sN = -d
+            sD = a
+    elif tN > tD:
+        tN = tD
+        if -d + b < 0:
+            sN = 0
+        elif -d + b > a:
+            sN = sD
+        else:
+            sN = -d + b
+            sD = a
+
+    sc = 0 if math.fabs(sN) < PARALLEL_TOLERANCE else sN/sD
+    tc = 0 if math.fabs(tN) < PARALLEL_TOLERANCE else tN/tD
+
+    vector_dp = vector_w + (sc * vector_u) - (tc * vector_v)
+    distance = np.linalg.norm(vector_dp)
+    return distance
+
+
 
 
 if __name__ == "__main__":
