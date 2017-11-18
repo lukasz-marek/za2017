@@ -316,18 +316,23 @@ def distance_between_face_and_solid(face, solid):
 def distance_between_solids(solid1, solid2):
     cpus = cpu_count() + 1
 
-    distances = []
     with Pool(processes=cpus) as worker:
+        tasks = []
+        min_distance = math.inf
         for face1 in solid1.get_faces():
             for face2 in solid2.get_faces():
                     task1 = worker.apply_async(distance_between_face_and_solid, (face1, solid2))
-                    distances.append(task1)
+                    tasks.append(task1)
 
                     task2 = worker.apply_async(distance_between_face_and_solid, (face2, solid1))
-                    distances.append(task2)
+                    tasks.append(task2)
 
-        distances = set(map(lambda future: future.get(), distances))
-    return min(distances)
+        for task in tasks:
+            distance_candidate = task.get()
+            print(distance_candidate)
+            if distance_candidate < min_distance:
+                min_distance = distance_candidate
+        return min_distance
 
 
 def create_bounding_box(solid):
