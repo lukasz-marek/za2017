@@ -306,6 +306,13 @@ class BoundingBox:
         self._max_z = maxz
 
 
+def distance_between_face_and_solid(face, solid):
+    distances = set()
+    for face1 in solid.get_faces():
+        distances.add(distance_between_faces(face, face1))
+    return min(distances)
+
+
 def distance_between_solids(solid1, solid2):
     cpus = cpu_count() + 1
 
@@ -313,8 +320,12 @@ def distance_between_solids(solid1, solid2):
     with Pool(processes=cpus) as worker:
         for face1 in solid1.get_faces():
             for face2 in solid2.get_faces():
-                    task = worker.apply_async(distance_between_faces, (face1, face2))
-                    distances.append(task)
+                    task1 = worker.apply_async(distance_between_face_and_solid, (face1, solid2))
+                    distances.append(task1)
+
+                    task2 = worker.apply_async(distance_between_face_and_solid, (face2, solid1))
+                    distances.append(task2)
+
         distances = set(map(lambda future: future.get(), distances))
     return min(distances)
 
@@ -360,5 +371,5 @@ if __name__ == "__main__":
     solid1 = load_solid("solid1.txt")
     solid2 = load_solid("solid2.txt")
     distance = distance_between_solids(solid1, solid2)
-    print(distance)
+    print("distance = ", distance)
 
