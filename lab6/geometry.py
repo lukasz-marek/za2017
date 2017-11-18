@@ -101,7 +101,7 @@ def distance_between_face_and_point(face, point):
     if point_belongs_to_face(nearest_point):
         return distance_between_points(nearest_point, point)
     else:
-        vertex_a, vertex_b, vertex_c = face.get_points();
+        vertex_a, vertex_b, vertex_c = face.get_points()
         edges = [Edge(vertex_a, vertex_b), Edge(vertex_a, vertex_c), Edge(vertex_b, vertex_c)]
         minimal_distance = math.inf
         for edge in edges:
@@ -270,6 +270,21 @@ def distance_between_face_and_edge(face, edge):
     min_distance = min(distances)
     return min_distance
 
+
+@lru_cache(maxsize=CACHE_SIZE)
+def distance_face2face(face1, face2):
+    distances = []
+
+    for face_edge in face1.get_edges():
+        distances.append(distance_between_face_and_edge(face2, face_edge))
+
+    for face_edge in face2.get_edges():
+        distances.append(distance_between_face_and_edge(face1, face_edge))
+
+    min_distance = min(distances)
+    return min_distance
+
+
 if __name__ == "__main__":
     dist = math.pi
     point_a = Point(10, 0, 0 + dist)
@@ -284,14 +299,15 @@ if __name__ == "__main__":
 
     # print(distance_between_points(point_a, point_b))
     # print(distance_between_face_and_point(face1, point_p))
-    # print(distance_between_faces(face1, face2))
+    print(distance_between_faces(face1, face2))
+    print(distance_face2face(face1, face2))
     # print(distance_between_faces_sym(face1, face2))
-    p1 = Point(10, 10, 0)
+    """p1 = Point(10, 10, 0)
     p2 = Point(20, 20, 0)
     p3 = Point(10, 10, dist)
     p4 = Point(20, 20, dist)
     edge1 = Edge(p1, p2)
     edge2 = Edge(p3, p4)
     print(distance_between_edges(edge1, edge2))
-    print(distance_between_edges(edge2, edge1))
+    print(distance_between_edges(edge2, edge1))"""
 
