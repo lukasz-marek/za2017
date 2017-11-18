@@ -78,6 +78,33 @@ class Face:
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
+    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face)
+    start1 = face.get_points()[0]
+    x1, y1, z1 = start1.get_coordinates()
+    initial_guess = np.asarray([x1, y1, z1])
+    optimized_function = lambda g: (g[0] - point.x()) ** 2 + (g[1] - point.y()) ** 2 + (g[2] - point.z()) ** 2
+
+    min_x1 = min(map(lambda point: point.get_coordinates()[0], face.get_points()))
+
+    max_x1 = max(map(lambda point: point.get_coordinates()[0], face.get_points()))
+
+    min_y1 = min(map(lambda point: point.get_coordinates()[1], face.get_points()))
+
+    max_y1 = max(map(lambda point: point.get_coordinates()[1], face.get_points()))
+
+    min_z1 = min(map(lambda point: point.get_coordinates()[2], face.get_points()))
+
+    max_z1 = max(map(lambda point: point.get_coordinates()[2], face.get_points()))
+
+    bounds = ((min_x1, max_x1), (min_y1, max_y1), (min_z1, max_z1))
+    plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
+    constraints = {'type': 'eq', 'fun': plane1_constraint}
+    result = minimize(optimized_function, initial_guess, method="SLSQP", bounds=bounds, constraints=constraints,
+                      options={'maxiter': 5000, 'eps': 1e-20, 'ftol': 1e-20})
+    return math.sqrt(result.fun)
+
+""""@lru_cache(maxsize=CACHE_SIZE)
+def distance_between_face_and_point(face, point):
     @lru_cache(maxsize=CACHE_SIZE)
     def point_belongs_to_face(point, face):
         x = Symbol('x')
@@ -113,7 +140,7 @@ def distance_between_face_and_point(face, point):
             if distance < minimal_distance:
                 minimal_distance = distance
         return minimal_distance
-
+"""
 
 @lru_cache(maxsize=CACHE_SIZE)
 def compute_plane_equation(face):
