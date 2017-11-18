@@ -98,7 +98,7 @@ def distance_between_face_and_point(face, point):
     point_equation = alpha * (x + alpha * c) + beta * (y + beta * c) + gamma * (z + gamma * c) + delta
     c = solve(point_equation, c)[0]
     nearest_point = Point(x + alpha * c, y + beta * c, z + gamma * c)
-    if point_belongs_to_face(nearest_point):
+    if point_belongs_to_face(nearest_point, face):
         return distance_between_points(nearest_point, point)
     else:
         vertex_a, vertex_b, vertex_c = face.get_points()
@@ -260,11 +260,6 @@ def distance_between_face_and_edge(face, edge):
     face_edges = face.get_edges()
     for face_edge in face_edges:
         distance = distance_between_edges(face_edge, edge)
-        distances.append(distance)
-
-    face_points = face.get_points()
-    for face_point in face_points:
-        distance = distance_between_edge_and_point(edge, face_point)
         distances.append(distance)
 
     min_distance = min(distances)
