@@ -131,7 +131,7 @@ def compute_plane_equation(face):
 
 
 @lru_cache(maxsize=CACHE_SIZE)
-def distance_between_faces(face1, face2):
+def distance_between_faces_solver(face1, face2):
     alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
     alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
     start1 = face1.get_points()[0]
@@ -272,7 +272,7 @@ def distance_between_face_and_edge(face, edge):
 
 
 @lru_cache(maxsize=CACHE_SIZE)
-def distance_face2face(face1, face2):
+def distance_between_faces(face1, face2):
     distances = []
 
     for face_edge in face1.get_edges():
@@ -300,7 +300,8 @@ if __name__ == "__main__":
     # print(distance_between_points(point_a, point_b))
     # print(distance_between_face_and_point(face1, point_p))
     print(distance_between_faces(face1, face2))
-    print(distance_face2face(face1, face2))
+    print(distance_between_faces(face2, face1))
+
     # print(distance_between_faces_sym(face1, face2))
     """p1 = Point(10, 10, 0)
     p2 = Point(20, 20, 0)
