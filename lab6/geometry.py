@@ -245,8 +245,6 @@ def distance_between_edges(edge1, edge2):
     return distance
 
 
-
-
 if __name__ == "__main__":
     dist = math.pi
     point_a = Point(10, 0, 0 + dist)
@@ -261,5 +259,10 @@ if __name__ == "__main__":
 
     # print(distance_between_points(point_a, point_b))
     # print(distance_between_face_and_point(face1, point_p))
-    print(distance_between_faces(face1, face2))
+    # print(distance_between_faces(face1, face2))
     # print(distance_between_faces_sym(face1, face2))
+    edge1 = Edge(point_a, point_p)
+    edge2 = Edge(point_b, point_c)
+    print(distance_between_edges(edge1, edge2))
+    print(distance_between_edges(edge2, edge1))
+
