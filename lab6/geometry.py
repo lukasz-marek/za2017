@@ -244,7 +244,7 @@ def distance_between_edges(edge1, edge2):
     tc = 0 if math.fabs(tN) < PARALLEL_TOLERANCE else tN/tD
 
     vector_dp = vector_w + (sc * vector_u) - (tc * vector_v)
-    distance = np.linalg.norm(vector_dp)
+    distance = math.sqrt(np.dot(vector_dp, vector_dp))
     return distance
 
 
@@ -285,6 +285,27 @@ def distance_between_faces(face1, face2):
     return min_distance
 
 
+class Solid:
+
+    def __init__(self, faces):
+        self._faces = faces
+        self._hashcode = hash(tuple(faces))
+
+    def get_faces(self):
+        return self._faces
+
+    def __hash__(self):
+        return self._hashcode
+
+
+def distance_between_solids(solid1, solid2):
+    distances = []
+    for face1 in solid1.get_faces():
+        for face2 in solid2.get_faces():
+            distance = distance_between_faces(face1, face2)
+            distances.append(distance)
+    return min(distances)
+
 if __name__ == "__main__":
     dist = math.pi
     point_a = Point(10, 0, 0 + dist)
@@ -299,15 +320,15 @@ if __name__ == "__main__":
 
     # print(distance_between_points(point_a, point_b))
     # print(distance_between_face_and_point(face1, point_p))
-    print(distance_between_faces(face1, face2))
-    print(distance_between_faces(face2, face1))
+    edge1 = Edge(point_a2, point_b2)
+
+    print(distance_between_face_and_edge(face1, edge1))
 
     # print(distance_between_faces_sym(face1, face2))
     """p1 = Point(10, 10, 0)
     p2 = Point(20, 20, 0)
     p3 = Point(10, 10, dist)
     p4 = Point(20, 20, dist)
-    edge1 = Edge(p1, p2)
     edge2 = Edge(p3, p4)
     print(distance_between_edges(edge1, edge2))
     print(distance_between_edges(edge2, edge1))"""
