@@ -1,10 +1,11 @@
 import math
 from sympy import Symbol
-from sympy.utilities import lambdify
 from functools import lru_cache
 from sympy.solvers import solve
 import numpy as np
 from scipy.optimize import minimize
+from multiprocessing import Pool, cpu_count
+
 
 CACHE_SIZE = 1000
 PARALLEL_TOLERANCE = 1e-16
@@ -87,21 +88,12 @@ def distance_between_face_and_point(face, point):
         z_equation = x * (a.z() - c.z()) + y * (b.z() - c.z()) - point.z() + c.z()
         systems = [[x_equation, y_equation], [x_equation, z_equation], [y_equation, z_equation]]
         for system in systems:
-            analyzed_data = solve(system, x, y)
-            if len(analyzed_data) == 1:
-                if x in analyzed_data and y in analyzed_data:
-                    x = analyzed_data[x].evalf()
-                    y = analyzed_data[y].evalf()
-                elif x in analyzed_data:
-                    x_function = lambdify(y, analyzed_data[x])
-                    y = 0.5
-                    x = x_function(y)
-                elif y in analyzed_data:
-                    y_function = lambdify(x, analyzed_data[y])
-                    x = 0.5
-                    y = y_function(x)
-                if x >= 0 and y >= 0 and x + y <= 1:
-                    return True
+            analyzed_data = solve(system, x, y, dict=True)
+            for solution in analyzed_data:
+                if x in solution and y in solution:
+                    x = solution[x].evalf()
+                    y = solution[y].evalf()
+                    return x >= 0 and y >= 0 and x + y <= 1
         return False
 
     alpha, beta, gamma, delta = compute_plane_equation(face)
@@ -315,11 +307,15 @@ class BoundingBox:
 
 
 def distance_between_solids(solid1, solid2):
-    distances = set()
-    for face1 in solid1.get_faces():
-        for face2 in solid2.get_faces():
-            distance = distance_between_faces(face1, face2)
-            distances.add(distance)
+    cpus = cpu_count() + 1
+
+    distances = []
+    with Pool(processes=cpus) as worker:
+        for face1 in solid1.get_faces():
+            for face2 in solid2.get_faces():
+                    task = worker.apply_async(distance_between_faces, (face1, face2))
+                    distances.append(task)
+        distances = set(map(lambda future: future.get(), distances))
     return min(distances)
 
 
