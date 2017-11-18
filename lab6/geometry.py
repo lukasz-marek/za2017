@@ -67,6 +67,9 @@ class Face:
     def get_points(self):
         return [self._point1, self._point2, self._point3]
 
+    def get_edges(self):
+        return [Edge(self._point1, self._point2), Edge(self._point1, self._point3), Edge(self._point2, self._point3)]
+
     def __hash__(self):
         return self._hashcode
 
@@ -244,6 +247,28 @@ def distance_between_edges(edge1, edge2):
     distance = np.linalg.norm(vector_dp)
     return distance
 
+
+@lru_cache(maxsize=CACHE_SIZE)
+def distance_between_face_and_edge(face, edge):
+    distances = []
+
+    edge_points = edge.get_points()
+    for edge_point in edge_points:
+        distance = distance_between_face_and_point(face, edge_point)
+        distances.append(distance)
+
+    face_edges = face.get_edges()
+    for face_edge in face_edges:
+        distance = distance_between_edges(face_edge, edge)
+        distances.append(distance)
+
+    face_points = face.get_points()
+    for face_point in face_points:
+        distance = distance_between_edge_and_point(edge, face_point)
+        distances.append(distance)
+
+    min_distance = min(distances)
+    return min_distance
 
 if __name__ == "__main__":
     dist = math.pi
