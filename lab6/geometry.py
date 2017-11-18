@@ -1,5 +1,6 @@
 import math
 from sympy import Symbol
+from sympy.utilities import lambdify
 from functools import lru_cache
 from sympy.solvers import solve
 import numpy as np
@@ -87,9 +88,20 @@ def distance_between_face_and_point(face, point):
         systems = [[x_equation, y_equation], [x_equation, z_equation], [y_equation, z_equation]]
         for system in systems:
             analyzed_data = solve(system, x, y)
-            if len(analyzed_data) == 1 and analyzed_data[x] >= 0 and analyzed_data[y] >= 0 and analyzed_data[x] + \
-                    analyzed_data[y] <= 1:
-                return True
+            if len(analyzed_data) == 1:
+                if x in analyzed_data and y in analyzed_data:
+                    x = analyzed_data[x].evalf()
+                    y = analyzed_data[y].evalf()
+                elif x in analyzed_data:
+                    x_function = lambdify(y, analyzed_data[x])
+                    y = 0.5
+                    x = x_function(y)
+                elif y in analyzed_data:
+                    y_function = lambdify(x, analyzed_data[y])
+                    x = 0.5
+                    y = y_function(x)
+                if x >= 0 and y >= 0 and x + y <= 1:
+                    return True
         return False
 
     alpha, beta, gamma, delta = compute_plane_equation(face)
@@ -323,29 +335,34 @@ def create_bounding_box(solid):
     return BoundingBox(min_x, max_x, min_y, max_y, min_z, max_z)
 
 
+def load_solid(file_name):
+    points = []
+
+    with open(file_name, "r", encoding="utf-8") as solid_file:
+        for line in solid_file:
+            if len(line.strip()) == 0:
+                continue
+            else:
+                x, y, z = tuple(map(lambda num: float(num.strip()), line.split(";")))
+                points.append(Point(x, y, z))
+    if len(points) % 3 != 0:
+        raise Exception
+    else:
+        def chunks(l, n):
+            for i in range(0, len(l), n):
+                yield tuple(l[i:i + n])
+        points_per_face = list(chunks(points, 3))
+        faces = []
+        for points in points_per_face:
+            p1, p2, p3 = points
+            face = Face(p1, p2, p3)
+            faces.append(face)
+        return Solid(faces)
+
+
 if __name__ == "__main__":
-    dist = math.pi
-    point_a = Point(10, 0, 0 + dist)
-    point_b = Point(0, 10, 0 + dist)
-    point_c = Point(0, 0, 10 + dist)
-    point_p = Point(3000, 11000, 300)
-    face1 = Face(point_a, point_b, point_c)
-    point_a2 = Point(10, 0, 0)
-    point_b2 = Point(0, 10, 0)
-    point_c2 = Point(0, 0, 10)
-    face2 = Face(point_a2, point_b2, point_c2)
+    solid1 = load_solid("solid1.txt")
+    solid2 = load_solid("solid2.txt")
+    distance = distance_between_solids(solid1, solid2)
+    print(distance)
 
-    # print(distance_between_points(point_a, point_b))
-    # print(distance_between_face_and_point(face1, point_p))
-    edge1 = Edge(point_a2, point_b2)
-
-    print(distance_between_face_and_edge(face1, edge1))
-
-    # print(distance_between_faces_sym(face1, face2))
-    """p1 = Point(10, 10, 0)
-    p2 = Point(20, 20, 0)
-    p3 = Point(10, 10, dist)
-    p4 = Point(20, 20, dist)
-    edge2 = Edge(p3, p4)
-    print(distance_between_edges(edge1, edge2))
-    print(distance_between_edges(edge2, edge1))"""
