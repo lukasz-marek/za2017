@@ -320,12 +320,8 @@ def distance_between_solids(solid1, solid2):
         tasks = []
         min_distance = math.inf
         for face1 in solid1.get_faces():
-            for face2 in solid2.get_faces():
-                    task1 = worker.apply_async(distance_between_face_and_solid, (face1, solid2))
-                    tasks.append(task1)
-
-                    task2 = worker.apply_async(distance_between_face_and_solid, (face2, solid1))
-                    tasks.append(task2)
+            task1 = worker.apply_async(distance_between_face_and_solid, (face1, solid2))
+            tasks.append(task1)
 
         for task in tasks:
             distance_candidate = task.get()
