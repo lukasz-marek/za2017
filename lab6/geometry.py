@@ -76,7 +76,8 @@ class Face:
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
-    def point_belongs_to_face(point):
+    @lru_cache(maxsize=CACHE_SIZE)
+    def point_belongs_to_face(point, face):
         x = Symbol('x')
         y = Symbol('y')
         a, b, c = tuple(face.get_points())
@@ -84,13 +85,12 @@ def distance_between_face_and_point(face, point):
         y_equation = x * (a.y() - c.y()) + y * (b.y() - c.y()) - point.y() + c.y()
         z_equation = x * (a.z() - c.z()) + y * (b.z() - c.z()) - point.z() + c.z()
         systems = [[x_equation, y_equation], [x_equation, z_equation], [y_equation, z_equation]]
-        analyzed_data = []
         for system in systems:
             analyzed_data = solve(system, x, y)
-            if len(analyzed_data) > 0:
-                break
-        x, y = analyzed_data[x], analyzed_data[y]
-        return x >= 0 and y >= 0 and x + y <= 1
+            if len(analyzed_data) == 1 and analyzed_data[x] >= 0 and analyzed_data[y] >= 0 and analyzed_data[x] + \
+                    analyzed_data[y] <= 1:
+                return True
+        return False
 
     alpha, beta, gamma, delta = compute_plane_equation(face)
     x, y, z = point.get_coordinates()
@@ -200,7 +200,7 @@ def distance_between_edges(edge1, edge2):
     c = np.dot(vector_v, vector_v)
     d = np.dot(vector_u, vector_w)
     e = np.dot(vector_v, vector_w)
-    D = a*c - b*b
+    D = a * c - b * b
     sc, sN, sD = D, D, D
     tc, tN, tD = D, D, D
 
@@ -210,8 +210,8 @@ def distance_between_edges(edge1, edge2):
         tN = e
         tD = c
     else:
-        sN = b*e - c*d
-        tN = a*e - b*d
+        sN = b * e - c * d
+        tN = a * e - b * d
         if sN < 0:
             sN = 0
             tN = e
@@ -240,8 +240,8 @@ def distance_between_edges(edge1, edge2):
             sN = -d + b
             sD = a
 
-    sc = 0 if math.fabs(sN) < PARALLEL_TOLERANCE else sN/sD
-    tc = 0 if math.fabs(tN) < PARALLEL_TOLERANCE else tN/tD
+    sc = 0 if math.fabs(sN) < PARALLEL_TOLERANCE else sN / sD
+    tc = 0 if math.fabs(tN) < PARALLEL_TOLERANCE else tN / tD
 
     vector_dp = vector_w + (sc * vector_u) - (tc * vector_v)
     distance = math.sqrt(np.dot(vector_dp, vector_dp))
@@ -286,7 +286,6 @@ def distance_between_faces(face1, face2):
 
 
 class Solid:
-
     def __init__(self, faces):
         self._faces = faces
         self._hashcode = hash(tuple(faces))
@@ -299,7 +298,6 @@ class Solid:
 
 
 class BoundingBox:
-
     def __init__(self, minx, maxx, miny, maxy, minz, maxz):
         self._min_x = minx
         self._max_x = maxx
@@ -356,4 +354,3 @@ if __name__ == "__main__":
     edge2 = Edge(p3, p4)
     print(distance_between_edges(edge1, edge2))
     print(distance_between_edges(edge2, edge1))"""
-
