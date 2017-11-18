@@ -298,6 +298,17 @@ class Solid:
         return self._hashcode
 
 
+class BoundingBox:
+
+    def __init__(self, minx, maxx, miny, maxy, minz, maxz):
+        self._min_x = minx
+        self._max_x = maxx
+        self._min_y = miny
+        self._max_y = maxy
+        self._min_z = minz
+        self._max_z = maxz
+
+
 def distance_between_solids(solid1, solid2):
     distances = []
     for face1 in solid1.get_faces():
@@ -306,6 +317,17 @@ def distance_between_solids(solid1, solid2):
             distances.append(distance)
     return min(distances)
 
+
+def create_bounding_box(solid):
+   min_x = min(map(lambda face: min(map(lambda point: point.x(), face.get_points())), solid.get_faces()))
+   min_y = min(map(lambda face: min(map(lambda point: point.y(), face.get_points())), solid.get_faces()))
+   min_z = min(map(lambda face: min(map(lambda point: point.z(), face.get_points())), solid.get_faces()))
+
+   max_x = max(map(lambda face: max(map(lambda point: point.x(), face.get_points())), solid.get_faces()))
+   max_y = max(map(lambda face: max(map(lambda point: point.y(), face.get_points())), solid.get_faces()))
+   max_z = max(map(lambda face: max(map(lambda point: point.z(), face.get_points())), solid.get_faces()))
+
+   return BoundingBox(min_x, max_x, min_y, max_y, min_z, max_z)
 if __name__ == "__main__":
     dist = math.pi
     point_a = Point(10, 0, 0 + dist)
