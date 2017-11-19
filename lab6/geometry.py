@@ -197,7 +197,7 @@ def distance_between_faces_solver(face1, face2):
     plane2_constraint = lambda g: g[3] * alpha2 + g[4] * beta2 + g[5] + gamma2 + delta2
     constraints = {'type': 'eq', 'fun': plane1_constraint}, {'type': 'eq', 'fun': plane2_constraint}
     result = minimize(optimized_function, initial_guess, method="SLSQP", bounds=bounds, constraints=constraints,
-                      options={'maxiter': 5000, 'eps': 1e-20, 'ftol': 1e-20})
+                      options={'maxiter': 500000, 'eps': 1e-30, 'ftol': 1e-30})
     return math.sqrt(result.fun)
 
 
@@ -334,10 +334,7 @@ class BoundingBox:
 
 
 def distance_between_face_and_solid(face, solid):
-    distances = set()
-    for face1 in solid.get_faces():
-        distances.add(distance_between_faces(face, face1))
-    return min(distances)
+    return min(map(lambda face1: distance_between_faces(face, face1), solid.get_faces()))
 
 
 def distance_between_solids(solid1, solid2):
@@ -345,17 +342,11 @@ def distance_between_solids(solid1, solid2):
 
     with Pool(processes=cpus) as worker:
         tasks = []
-        min_distance = math.inf
         for face1 in solid1.get_faces():
             task1 = worker.apply_async(distance_between_face_and_solid, (face1, solid2))
             tasks.append(task1)
 
-        for task in tasks:
-            distance_candidate = task.get()
-            print(distance_candidate)
-            if distance_candidate < min_distance:
-                min_distance = distance_candidate
-        return min_distance
+        return min(map(lambda task: task.get(), tasks))
 
 
 def create_bounding_box(solid):
