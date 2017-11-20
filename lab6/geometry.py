@@ -59,6 +59,7 @@ class Face:
         self._point2 = point2
         self._point3 = point3
         self._hashcode = hash((point1, point2, point3))
+        self._plane_equation = compute_plane_equation(self)
 
     def get_points(self):
         return [self._point1, self._point2, self._point3]
@@ -66,13 +67,16 @@ class Face:
     def get_edges(self):
         return [Edge(self._point1, self._point2), Edge(self._point1, self._point3), Edge(self._point2, self._point3)]
 
+    def get_plane_equation(self):
+        return self._plane_equation
+
     def __hash__(self):
         return self._hashcode
 
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
-    alpha, beta, gamma, delta = compute_plane_equation(face)
+    alpha, beta, gamma, delta = face.get_plane_equation()
     x, y, z = point.get_coordinates()
     c = -(alpha * x + beta * y + delta + gamma * z) / (alpha ** 2 + beta ** 2 + gamma ** 2)
     nearest_point = Point(x + alpha * c, y + beta * c, z + gamma * c)
