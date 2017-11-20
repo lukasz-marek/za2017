@@ -6,7 +6,6 @@ import numpy as np
 from scipy.optimize import minimize
 from multiprocessing import Pool, cpu_count
 
-
 CACHE_SIZE = 1000
 PARALLEL_TOLERANCE = 1e-16
 
@@ -103,6 +102,7 @@ def distance_between_face_and_point(face, point):
                       options={'maxiter': 5000, 'eps': 1e-20, 'ftol': 1e-20})
     return math.sqrt(result.fun)
 
+
 """"@lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
     @lru_cache(maxsize=CACHE_SIZE)
@@ -143,6 +143,28 @@ def distance_between_face_and_point(face, point):
 """
 
 @lru_cache(maxsize=CACHE_SIZE)
+
+def compute_plane_equation(face):
+    x1, y1, z1 = face.get_points()[0].get_coordinates()
+    x2, y2, z2 = face.get_points()[1].get_coordinates()
+    x3, y3, z3 = face.get_points()[2].get_coordinates()
+
+    alpha = (-y1 * z2 + y1 * z3 + y2 * z1 - y2 * z3 - y3 * z1 + y3 * z2) * math.sqrt(1 / (
+        x1 ** 2 * y2 ** 2 - 2 * x1 ** 2 * y2 * y3 + x1 ** 2 * y3 ** 2 + x1 ** 2 * z2 ** 2 - 2 * x1 ** 2 * z2 * z3 + x1 ** 2 * z3 ** 2 - 2 * x1 * x2 * y1 * y2 + 2 * x1 * x2 * y1 * y3 + 2 * x1 * x2 * y2 * y3 - 2 * x1 * x2 * y3 ** 2 - 2 * x1 * x2 * z1 * z2 + 2 * x1 * x2 * z1 * z3 + 2 * x1 * x2 * z2 * z3 - 2 * x1 * x2 * z3 ** 2 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2 + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2 + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2 + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3 - 2 * y1 * y3 * z2 ** 2 + 2 * y1 * y3 * z2 * z3 + y2 ** 2 * z1 ** 2 - 2 * y2 ** 2 * z1 * z3 + y2 ** 2 * z3 ** 2 - 2 * y2 * y3 * z1 ** 2 + 2 * y2 * y3 * z1 * z2 + 2 * y2 * y3 * z1 * z3 - 2 * y2 * y3 * z2 * z3 + y3 ** 2 * z1 ** 2 - 2 * y3 ** 2 * z1 * z2 + y3 ** 2 * z2 ** 2))
+
+    beta = (x1 * z2 - x1 * z3 - x2 * z1 + x2 * z3 + x3 * z1 - x3 * z2) * math.sqrt(1 / (
+        x1 ** 2 * y2 ** 2 - 2 * x1 ** 2 * y2 * y3 + x1 ** 2 * y3 ** 2 + x1 ** 2 * z2 ** 2 - 2 * x1 ** 2 * z2 * z3 + x1 ** 2 * z3 ** 2 - 2 * x1 * x2 * y1 * y2 + 2 * x1 * x2 * y1 * y3 + 2 * x1 * x2 * y2 * y3 - 2 * x1 * x2 * y3 ** 2 - 2 * x1 * x2 * z1 * z2 + 2 * x1 * x2 * z1 * z3 + 2 * x1 * x2 * z2 * z3 - 2 * x1 * x2 * z3 ** 2 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2 + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2 + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2 + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3 - 2 * y1 * y3 * z2 ** 2 + 2 * y1 * y3 * z2 * z3 + y2 ** 2 * z1 ** 2 - 2 * y2 ** 2 * z1 * z3 + y2 ** 2 * z3 ** 2 - 2 * y2 * y3 * z1 ** 2 + 2 * y2 * y3 * z1 * z2 + 2 * y2 * y3 * z1 * z3 - 2 * y2 * y3 * z2 * z3 + y3 ** 2 * z1 ** 2 - 2 * y3 ** 2 * z1 * z2 + y3 ** 2 * z2 ** 2))
+
+    gamma = (-x1 * y2 + x1 * y3 + x2 * y1 - x2 * y3 - x3 * y1 + x3 * y2) * math.sqrt(1 / (
+        x1 ** 2 * y2 ** 2 - 2 * x1 ** 2 * y2 * y3 + x1 ** 2 * y3 ** 2 + x1 ** 2 * z2 ** 2 - 2 * x1 ** 2 * z2 * z3 + x1 ** 2 * z3 ** 2 - 2 * x1 * x2 * y1 * y2 + 2 * x1 * x2 * y1 * y3 + 2 * x1 * x2 * y2 * y3 - 2 * x1 * x2 * y3 ** 2 - 2 * x1 * x2 * z1 * z2 + 2 * x1 * x2 * z1 * z3 + 2 * x1 * x2 * z2 * z3 - 2 * x1 * x2 * z3 ** 2 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2 + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2 + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2 + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3 - 2 * y1 * y3 * z2 ** 2 + 2 * y1 * y3 * z2 * z3 + y2 ** 2 * z1 ** 2 - 2 * y2 ** 2 * z1 * z3 + y2 ** 2 * z3 ** 2 - 2 * y2 * y3 * z1 ** 2 + 2 * y2 * y3 * z1 * z2 + 2 * y2 * y3 * z1 * z3 - 2 * y2 * y3 * z2 * z3 + y3 ** 2 * z1 ** 2 - 2 * y3 ** 2 * z1 * z2 + y3 ** 2 * z2 ** 2))
+
+    delta = (x1 * y2 * z3 - x1 * y3 * z2 - x2 * y1 * z3 + x2 * y3 * z1 + x3 * y1 * z2 - x3 * y2 * z1) * math.sqrt(1 / (
+        x1 ** 2 * y2 ** 2 - 2 * x1 ** 2 * y2 * y3 + x1 ** 2 * y3 ** 2 + x1 ** 2 * z2 ** 2 - 2 * x1 ** 2 * z2 * z3 + x1 ** 2 * z3 ** 2 - 2 * x1 * x2 * y1 * y2 + 2 * x1 * x2 * y1 * y3 + 2 * x1 * x2 * y2 * y3 - 2 * x1 * x2 * y3 ** 2 - 2 * x1 * x2 * z1 * z2 + 2 * x1 * x2 * z1 * z3 + 2 * x1 * x2 * z2 * z3 - 2 * x1 * x2 * z3 ** 2 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2 + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2 + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2 + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3 - 2 * y1 * y3 * z2 ** 2 + 2 * y1 * y3 * z2 * z3 + y2 ** 2 * z1 ** 2 - 2 * y2 ** 2 * z1 * z3 + y2 ** 2 * z3 ** 2 - 2 * y2 * y3 * z1 ** 2 + 2 * y2 * y3 * z1 * z2 + 2 * y2 * y3 * z1 * z3 - 2 * y2 * y3 * z2 * z3 + y3 ** 2 * z1 ** 2 - 2 * y3 ** 2 * z1 * z2 + y3 ** 2 * z2 ** 2))
+
+    return alpha, beta, gamma, delta
+
+"""
+@lru_cache(maxsize=CACHE_SIZE)
 def compute_plane_equation(face):
     alpha = Symbol('alpha')
     beta = Symbol('beta')
@@ -158,7 +180,7 @@ def compute_plane_equation(face):
     constraint_equation = alpha ** 2 + beta ** 2 + gamma ** 2 - 1
     system.append(constraint_equation)
     plane = solve(system, alpha, beta, gamma, delta)[0]
-    return tuple(map(lambda number: number.evalf(), plane))
+    return tuple(map(lambda number: number.evalf(), plane))"""
 
 
 @lru_cache(maxsize=CACHE_SIZE)
@@ -377,6 +399,7 @@ def load_solid(file_name):
         def chunks(l, n):
             for i in range(0, len(l), n):
                 yield tuple(l[i:i + n])
+
         points_per_face = list(chunks(points, 3))
         faces = []
         for points in points_per_face:
@@ -390,5 +413,4 @@ if __name__ == "__main__":
     solid1 = load_solid("solid1.txt")
     solid2 = load_solid("solid2.txt")
     distance = distance_between_solids(solid1, solid2)
-    print("distance = ", distance)
-
+    print("distance between solids = ", distance)
