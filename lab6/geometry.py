@@ -352,6 +352,8 @@ def distance_between_face_and_solid(face, solid):
 def distance_between_solids(solid1, solid2):
     cpus = cpu_count() + 1
 
+    solid1, solid2 = (solid2, solid1) if len(solid1.get_faces()) < len(solid2.get_faces()) else (solid1, solid2)
+
     with Pool(processes=cpus) as worker:
         tasks = []
         for face1 in solid1.get_faces():
@@ -402,5 +404,5 @@ def load_solid(file_name):
 if __name__ == "__main__":
     solid1 = load_solid("solid1.txt")
     solid2 = load_solid("solid2.txt")
-    distance = distance_between_solids(solid1, solid2)
+    distance = distance_between_solids(solid2, solid1)
     print("distance between solids = ", distance)
