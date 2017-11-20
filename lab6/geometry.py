@@ -1,7 +1,5 @@
 import math
-from sympy import Symbol
 from functools import lru_cache
-from sympy.solvers import solve
 import numpy as np
 from multiprocessing import Pool, cpu_count
 
@@ -77,11 +75,8 @@ class Face:
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
     alpha, beta, gamma, delta = compute_plane_equation(face)
-
-    c = Symbol('c')
     x, y, z = point.get_coordinates()
-    point_equation = alpha * (x + alpha * c) + beta * (y + beta * c) + gamma * (z + gamma * c) + delta
-    c = solve(point_equation, c)[0]
+    c = -(alpha * x + beta * y + delta + gamma * z) / (alpha ** 2 + beta ** 2 + gamma ** 2)
     nearest_point = Point(x + alpha * c, y + beta * c, z + gamma * c)
 
     if point_belongs_to_face(nearest_point, face):
@@ -104,8 +99,19 @@ def point_belongs_to_face(point, face):
     bx, by, bz = face.get_points()[1].get_coordinates()
     cx, cy, cz = face.get_points()[2].get_coordinates()
 
-    x = ((bx - cx)*(cy - py) - (by - cy)*(cx - px))/((ax - cx)*(by - cy) - (ay - cy)*(bx - cx))
-    y = (-(ax - cx)*(cy - py) + (ay - cy)*(cx - px))/((ax - cx)*(by - cy) - (ay - cy)*(bx - cx))
+    x = math.nan
+    y = math.nan
+    if ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx)) != 0 and ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx)) != 0:
+        x = ((bx - cx) * (cy - py) - (by - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
+        y = (-(ax - cx) * (cy - py) + (ay - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
+    elif (math.isnan(x) or math.isnan(y)) and ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0 and (
+            (ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0:
+        x = ((bx - cx) * (cz - pz) - (bz - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
+        y = (-(ax - cx) * (cz - pz) + (az - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
+    elif (math.isnan(x) or math.isnan(y)) and ((ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0 and (
+            (ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0:
+        x = ((by - cy) * (cz - pz) - (bz - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
+        y = (-(ay - cy) * (cz - pz) + (az - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
 
     return not math.isnan(x) and not math.isnan(y) and x >= 0 and y >= 0 and x + y <= 1
 
