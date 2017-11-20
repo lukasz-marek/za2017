@@ -143,7 +143,6 @@ def distance_between_face_and_point(face, point):
 """
 
 @lru_cache(maxsize=CACHE_SIZE)
-
 def compute_plane_equation(face):
     x1, y1, z1 = face.get_points()[0].get_coordinates()
     x2, y2, z2 = face.get_points()[1].get_coordinates()
