@@ -157,11 +157,14 @@ class Face:
                 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3
                 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2
                 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2
-                + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2
+                + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3
+                + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2
                 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2
                 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2
-                + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2
-                + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3
+                + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3
+                + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2
+                + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2
+                + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3
                 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3
                 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2
                 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3
@@ -219,7 +222,6 @@ def point_belongs_to_face(point, face):
         y = (-(ay - cy) * (cz - pz) + (az - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
 
     return not math.isnan(x) and not math.isnan(y) and x >= 0 and y >= 0 and x + y <= 1
-
 
 
 @lru_cache(maxsize=CACHE_SIZE)
