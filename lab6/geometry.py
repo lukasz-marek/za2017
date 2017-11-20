@@ -94,15 +94,21 @@ def point_belongs_to_face(point, face):
 
     x = math.nan
     y = math.nan
+
     if ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx)) != 0 and ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx)) != 0:
+
         x = ((bx - cx) * (cy - py) - (by - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
         y = (-(ax - cx) * (cy - py) + (ay - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
+
     elif (math.isnan(x) or math.isnan(y)) and ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0 and (
                     (ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0:
+
         x = ((bx - cx) * (cz - pz) - (bz - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
         y = (-(ax - cx) * (cz - pz) + (az - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
+
     elif (math.isnan(x) or math.isnan(y)) and ((ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0 and (
                     (ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0:
+
         x = ((by - cy) * (cz - pz) - (bz - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
         y = (-(ay - cy) * (cz - pz) + (az - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
 
