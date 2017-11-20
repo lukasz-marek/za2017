@@ -3,7 +3,7 @@ from functools import lru_cache
 import numpy as np
 from multiprocessing import Pool, cpu_count
 
-CACHE_SIZE = 1000
+CACHE_SIZE = 10000
 PARALLEL_TOLERANCE = 1e-16
 
 
@@ -37,9 +37,7 @@ class Point:
 def distance_between_points(point1, point2):
     coordinates1 = np.asarray(point1.get_coordinates())
     coordinates2 = np.asarray(point2.get_coordinates())
-    squared_distance = np.sum((coordinates1 - coordinates2) ** 2)
-    distance = math.sqrt(squared_distance)
-    return distance
+    return np.sqrt(np.sum((coordinates1 - coordinates2) ** 2))
 
 
 class Edge:
@@ -84,12 +82,7 @@ def distance_between_face_and_point(face, point):
     else:
         vertex_a, vertex_b, vertex_c = face.get_points()
         edges = [Edge(vertex_a, vertex_b), Edge(vertex_a, vertex_c), Edge(vertex_b, vertex_c)]
-        minimal_distance = math.inf
-        for edge in edges:
-            distance = distance_between_edge_and_point(edge, point)
-            if distance < minimal_distance:
-                minimal_distance = distance
-        return minimal_distance
+        return min(map(lambda edge: distance_between_edge_and_point(edge, point), edges))
 
 
 @lru_cache(maxsize=CACHE_SIZE)
@@ -211,23 +204,20 @@ def distance_between_edges(edge1, edge2):
     tc = 0 if math.fabs(tN) < PARALLEL_TOLERANCE else tN / tD
 
     vector_dp = vector_w + (sc * vector_u) - (tc * vector_v)
-    distance = math.sqrt(np.dot(vector_dp, vector_dp))
-    return distance
+    return math.sqrt(np.dot(vector_dp, vector_dp))
 
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_edge(face, edge):
-    distances = []
+    distances = set()
 
     edge_points = edge.get_points()
     for edge_point in edge_points:
-        distance = distance_between_face_and_point(face, edge_point)
-        distances.append(distance)
+        distances.add(distance_between_face_and_point(face, edge_point))
 
     face_edges = face.get_edges()
     for face_edge in face_edges:
-        distance = distance_between_edges(face_edge, edge)
-        distances.append(distance)
+        distances.add(distance_between_edges(face_edge, edge))
 
     min_distance = min(distances)
     return min_distance
@@ -235,13 +225,13 @@ def distance_between_face_and_edge(face, edge):
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_faces(face1, face2):
-    distances = []
+    distances = set()
 
     for face_edge in face1.get_edges():
-        distances.append(distance_between_face_and_edge(face2, face_edge))
+        distances.add(distance_between_face_and_edge(face2, face_edge))
 
     for face_edge in face2.get_edges():
-        distances.append(distance_between_face_and_edge(face1, face_edge))
+        distances.add(distance_between_face_and_edge(face1, face_edge))
 
     min_distance = min(distances)
     return min_distance
