@@ -98,11 +98,11 @@ def point_belongs_to_face(point, face):
         x = ((bx - cx) * (cy - py) - (by - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
         y = (-(ax - cx) * (cy - py) + (ay - cy) * (cx - px)) / ((ax - cx) * (by - cy) - (ay - cy) * (bx - cx))
     elif (math.isnan(x) or math.isnan(y)) and ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0 and (
-            (ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0:
+                    (ax - cx) * (bz - cz) - (az - cz) * (bx - cx)) != 0:
         x = ((bx - cx) * (cz - pz) - (bz - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
         y = (-(ax - cx) * (cz - pz) + (az - cz) * (cx - px)) / ((ax - cx) * (bz - cz) - (az - cz) * (bx - cx))
     elif (math.isnan(x) or math.isnan(y)) and ((ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0 and (
-            (ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0:
+                    (ay - cy) * (bz - cz) - (az - cz) * (by - cy)) != 0:
         x = ((by - cy) * (cz - pz) - (bz - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
         y = (-(ay - cy) * (cz - pz) + (az - cz) * (cy - py)) / ((ay - cy) * (bz - cz) - (az - cz) * (by - cy))
 
@@ -219,8 +219,7 @@ def distance_between_face_and_edge(face, edge):
     for face_edge in face_edges:
         distances.add(distance_between_edges(face_edge, edge))
 
-    min_distance = min(distances)
-    return min_distance
+    return min(distances)
 
 
 @lru_cache(maxsize=CACHE_SIZE)
@@ -233,8 +232,7 @@ def distance_between_faces(face1, face2):
     for face_edge in face2.get_edges():
         distances.add(distance_between_face_and_edge(face1, face_edge))
 
-    min_distance = min(distances)
-    return min_distance
+    return min(distances)
 
 
 class Solid:
