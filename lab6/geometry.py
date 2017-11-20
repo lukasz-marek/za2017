@@ -3,7 +3,6 @@ from sympy import Symbol
 from functools import lru_cache
 from sympy.solvers import solve
 import numpy as np
-from scipy.optimize import minimize
 from multiprocessing import Pool, cpu_count
 
 CACHE_SIZE = 1000
@@ -77,58 +76,14 @@ class Face:
 
 @lru_cache(maxsize=CACHE_SIZE)
 def distance_between_face_and_point(face, point):
-    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face)
-    start1 = face.get_points()[0]
-    x1, y1, z1 = start1.get_coordinates()
-    initial_guess = np.asarray([x1, y1, z1])
-    optimized_function = lambda g: (g[0] - point.x()) ** 2 + (g[1] - point.y()) ** 2 + (g[2] - point.z()) ** 2
-
-    min_x1 = min(map(lambda point: point.get_coordinates()[0], face.get_points()))
-
-    max_x1 = max(map(lambda point: point.get_coordinates()[0], face.get_points()))
-
-    min_y1 = min(map(lambda point: point.get_coordinates()[1], face.get_points()))
-
-    max_y1 = max(map(lambda point: point.get_coordinates()[1], face.get_points()))
-
-    min_z1 = min(map(lambda point: point.get_coordinates()[2], face.get_points()))
-
-    max_z1 = max(map(lambda point: point.get_coordinates()[2], face.get_points()))
-
-    bounds = ((min_x1, max_x1), (min_y1, max_y1), (min_z1, max_z1))
-    plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
-    constraints = {'type': 'eq', 'fun': plane1_constraint}
-    result = minimize(optimized_function, initial_guess, method="SLSQP", bounds=bounds, constraints=constraints,
-                      options={'maxiter': 5000, 'eps': 1e-20, 'ftol': 1e-20})
-    return math.sqrt(result.fun)
-
-
-""""@lru_cache(maxsize=CACHE_SIZE)
-def distance_between_face_and_point(face, point):
-    @lru_cache(maxsize=CACHE_SIZE)
-    def point_belongs_to_face(point, face):
-        x = Symbol('x')
-        y = Symbol('y')
-        a, b, c = tuple(face.get_points())
-        x_equation = x * (a.x() - c.x()) + y * (b.x() - c.x()) - point.x() + c.x()
-        y_equation = x * (a.y() - c.y()) + y * (b.y() - c.y()) - point.y() + c.y()
-        z_equation = x * (a.z() - c.z()) + y * (b.z() - c.z()) - point.z() + c.z()
-        systems = [[x_equation, y_equation], [x_equation, z_equation], [y_equation, z_equation]]
-        for system in systems:
-            analyzed_data = solve(system, x, y, dict=True)
-            for solution in analyzed_data:
-                if x in solution and y in solution:
-                    x = solution[x].evalf()
-                    y = solution[y].evalf()
-                    return x >= 0 and y >= 0 and x + y <= 1
-        return False
-
     alpha, beta, gamma, delta = compute_plane_equation(face)
-    x, y, z = point.get_coordinates()
+
     c = Symbol('c')
+    x, y, z = point.get_coordinates()
     point_equation = alpha * (x + alpha * c) + beta * (y + beta * c) + gamma * (z + gamma * c) + delta
     c = solve(point_equation, c)[0]
     nearest_point = Point(x + alpha * c, y + beta * c, z + gamma * c)
+
     if point_belongs_to_face(nearest_point, face):
         return distance_between_points(nearest_point, point)
     else:
@@ -140,7 +95,20 @@ def distance_between_face_and_point(face, point):
             if distance < minimal_distance:
                 minimal_distance = distance
         return minimal_distance
-"""
+
+
+@lru_cache(maxsize=CACHE_SIZE)
+def point_belongs_to_face(point, face):
+    px, py, pz = point.get_coordinates()
+    ax, ay, az = face.get_points()[0].get_coordinates()
+    bx, by, bz = face.get_points()[1].get_coordinates()
+    cx, cy, cz = face.get_points()[2].get_coordinates()
+
+    x = ((bx - cx)*(cy - py) - (by - cy)*(cx - px))/((ax - cx)*(by - cy) - (ay - cy)*(bx - cx))
+    y = (-(ax - cx)*(cy - py) + (ay - cy)*(cx - px))/((ax - cx)*(by - cy) - (ay - cy)*(bx - cx))
+
+    return not math.isnan(x) and not math.isnan(y) and x >= 0 and y >= 0 and x + y <= 1
+
 
 @lru_cache(maxsize=CACHE_SIZE)
 def compute_plane_equation(face):
@@ -161,65 +129,6 @@ def compute_plane_equation(face):
         x1 ** 2 * y2 ** 2 - 2 * x1 ** 2 * y2 * y3 + x1 ** 2 * y3 ** 2 + x1 ** 2 * z2 ** 2 - 2 * x1 ** 2 * z2 * z3 + x1 ** 2 * z3 ** 2 - 2 * x1 * x2 * y1 * y2 + 2 * x1 * x2 * y1 * y3 + 2 * x1 * x2 * y2 * y3 - 2 * x1 * x2 * y3 ** 2 - 2 * x1 * x2 * z1 * z2 + 2 * x1 * x2 * z1 * z3 + 2 * x1 * x2 * z2 * z3 - 2 * x1 * x2 * z3 ** 2 + 2 * x1 * x3 * y1 * y2 - 2 * x1 * x3 * y1 * y3 - 2 * x1 * x3 * y2 ** 2 + 2 * x1 * x3 * y2 * y3 + 2 * x1 * x3 * z1 * z2 - 2 * x1 * x3 * z1 * z3 - 2 * x1 * x3 * z2 ** 2 + 2 * x1 * x3 * z2 * z3 + x2 ** 2 * y1 ** 2 - 2 * x2 ** 2 * y1 * y3 + x2 ** 2 * y3 ** 2 + x2 ** 2 * z1 ** 2 - 2 * x2 ** 2 * z1 * z3 + x2 ** 2 * z3 ** 2 - 2 * x2 * x3 * y1 ** 2 + 2 * x2 * x3 * y1 * y2 + 2 * x2 * x3 * y1 * y3 - 2 * x2 * x3 * y2 * y3 - 2 * x2 * x3 * z1 ** 2 + 2 * x2 * x3 * z1 * z2 + 2 * x2 * x3 * z1 * z3 - 2 * x2 * x3 * z2 * z3 + x3 ** 2 * y1 ** 2 - 2 * x3 ** 2 * y1 * y2 + x3 ** 2 * y2 ** 2 + x3 ** 2 * z1 ** 2 - 2 * x3 ** 2 * z1 * z2 + x3 ** 2 * z2 ** 2 + y1 ** 2 * z2 ** 2 - 2 * y1 ** 2 * z2 * z3 + y1 ** 2 * z3 ** 2 - 2 * y1 * y2 * z1 * z2 + 2 * y1 * y2 * z1 * z3 + 2 * y1 * y2 * z2 * z3 - 2 * y1 * y2 * z3 ** 2 + 2 * y1 * y3 * z1 * z2 - 2 * y1 * y3 * z1 * z3 - 2 * y1 * y3 * z2 ** 2 + 2 * y1 * y3 * z2 * z3 + y2 ** 2 * z1 ** 2 - 2 * y2 ** 2 * z1 * z3 + y2 ** 2 * z3 ** 2 - 2 * y2 * y3 * z1 ** 2 + 2 * y2 * y3 * z1 * z2 + 2 * y2 * y3 * z1 * z3 - 2 * y2 * y3 * z2 * z3 + y3 ** 2 * z1 ** 2 - 2 * y3 ** 2 * z1 * z2 + y3 ** 2 * z2 ** 2))
 
     return alpha, beta, gamma, delta
-
-"""
-@lru_cache(maxsize=CACHE_SIZE)
-def compute_plane_equation(face):
-    alpha = Symbol('alpha')
-    beta = Symbol('beta')
-    gamma = Symbol('gamma')
-    delta = Symbol('delta')
-
-    system = []
-    for face_point in face.get_points():
-        x, y, z = face_point.get_coordinates()
-        equation = x * alpha + y * beta + z * gamma + delta
-        system.append(equation)
-
-    constraint_equation = alpha ** 2 + beta ** 2 + gamma ** 2 - 1
-    system.append(constraint_equation)
-    plane = solve(system, alpha, beta, gamma, delta)[0]
-    return tuple(map(lambda number: number.evalf(), plane))"""
-
-
-@lru_cache(maxsize=CACHE_SIZE)
-def distance_between_faces_solver(face1, face2):
-    alpha1, beta1, gamma1, delta1 = compute_plane_equation(face1)
-    alpha2, beta2, gamma2, delta2 = compute_plane_equation(face2)
-    start1 = face1.get_points()[0]
-    start2 = face2.get_points()[0]
-    x1, y1, z1 = start1.get_coordinates()
-    x2, y2, z2 = start2.get_coordinates()
-    initial_guess = np.asarray([x1, y1, z1, x2, y2, z2])
-    optimized_function = lambda g: (g[0] - g[3]) ** 2 + (g[1] - g[4]) ** 2 + (g[2] - g[5]) ** 2
-
-    min_x1 = min(map(lambda point: point.get_coordinates()[0], face1.get_points()))
-    min_x2 = min(map(lambda point: point.get_coordinates()[0], face2.get_points()))
-
-    max_x1 = max(map(lambda point: point.get_coordinates()[0], face1.get_points()))
-    max_x2 = max(map(lambda point: point.get_coordinates()[0], face2.get_points()))
-
-    min_y1 = min(map(lambda point: point.get_coordinates()[1], face1.get_points()))
-    min_y2 = min(map(lambda point: point.get_coordinates()[1], face2.get_points()))
-
-    max_y1 = max(map(lambda point: point.get_coordinates()[1], face1.get_points()))
-    max_y2 = max(map(lambda point: point.get_coordinates()[1], face2.get_points()))
-
-    min_z1 = min(map(lambda point: point.get_coordinates()[2], face1.get_points()))
-    min_z2 = min(map(lambda point: point.get_coordinates()[2], face2.get_points()))
-
-    max_z1 = max(map(lambda point: point.get_coordinates()[2], face1.get_points()))
-    max_z2 = max(map(lambda point: point.get_coordinates()[2], face2.get_points()))
-
-    bounds = ((min_x1, max_x1), (min_y1, max_y1), (min_z1, max_z1),
-              (min_x2, max_x2), (min_y2, max_y2), (min_z2, max_z2))
-
-    plane1_constraint = lambda g: g[0] * alpha1 + g[1] * beta1 + g[2] + gamma1 + delta1
-    plane2_constraint = lambda g: g[3] * alpha2 + g[4] * beta2 + g[5] + gamma2 + delta2
-    constraints = {'type': 'eq', 'fun': plane1_constraint}, {'type': 'eq', 'fun': plane2_constraint}
-    result = minimize(optimized_function, initial_guess, method="SLSQP", bounds=bounds, constraints=constraints,
-                      options={'maxiter': 500000, 'eps': 1e-30, 'ftol': 1e-30})
-    return math.sqrt(result.fun)
 
 
 @lru_cache(maxsize=CACHE_SIZE)
