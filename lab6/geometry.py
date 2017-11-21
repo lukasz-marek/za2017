@@ -350,6 +350,12 @@ class BoundingBox:
         self._min_z = minz
         self._max_z = maxz
 
+    def collides_with(self, box):
+        return self._max_x >= box._min_x \
+               and box._max_x >= self._min_x and self._max_y >= box._min_y \
+               and box._max_y >= self._min_y and self._max_z >= box._min_z \
+               and box._max_z >= self._min_z
+
 
 def distance_between_face_and_solid(face, solid):
     return min(map(lambda face1: distance_between_faces(face, face1), solid.get_faces()))
