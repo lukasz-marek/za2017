@@ -333,6 +333,7 @@ class Solid:
     def __init__(self, faces):
         self._faces = faces
         self._hashcode = hash(tuple(faces))
+        self._bounding_box = create_bounding_box(self)
 
     def get_faces(self):
         return self._faces
