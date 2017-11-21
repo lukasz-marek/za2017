@@ -408,6 +408,23 @@ def load_solid(file_name):
 
 
 if __name__ == "__main__":
+    # f1:
+    p1 = Point(1, 0, 0)
+    p2 = Point(0, 1, 0)
+    p3 = Point(0, 0, 0)
+
+    face1 = Face(p1, p2, p3)
+    # f2:
+    p4 = Point(100, 0, 0.13)
+    p5 = Point(0, 100, 0.13)
+    p6 = Point(-100, -100, 0.13)
+
+    face2 = Face(p4, p5, p6)
+
+    distance = distance_between_faces(face1, face2)
+    print("distance between faces = ", distance)
+
+    # solids
     solid1 = load_solid("solid1.txt")
     solid2 = load_solid("solid2.txt")
     distance = distance_between_solids(solid2, solid1)
